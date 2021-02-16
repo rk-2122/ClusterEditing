@@ -33,9 +33,11 @@ int main(int argc, char *argv[]){
   else Gin = Graph("../instances/exact/exact001.gr");
 
     
-  // Gin.show();
-  // Gin.merge_nodes(0,9);
-  // Gin.show();
+  Gin.show();
+
+  vector <int> t;
+  if(Gin.conflict_triple(t)) dump_vec(t);
+
   
   return 0;
   
