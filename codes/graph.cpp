@@ -14,7 +14,7 @@ Graph::Graph(){
 
 Graph::Graph(int n){
   this->num_nodes = n;
-  this->weight = vector <vector <int>>(n, vector <int>(n,0));
+  this->weight = vector <vector <int>>(n, vector <int>(n,-1));
   this->flag = vector <vector <int>>(n, vector <int>(n,0));
 }
 
@@ -42,7 +42,7 @@ Graph::Graph(const char *filename){
 	if(cnt == 2){
 	  N = stoi(line);
 	  this->num_nodes = N;
-	  this->weight = vector <vector <int>>(N, vector <int>(N,0));
+	  this->weight = vector <vector <int>>(N, vector <int>(N,-1));
 	  this->flag = vector <vector <int>>(N, vector <int>(N,0));
 	}
 	else if(cnt == 3){
@@ -58,9 +58,8 @@ Graph::Graph(const char *filename){
       ss >> a;
       ss.ignore();
       ss >> b;
-      int aa = MIN(a,b);
-      int bb = MAX(a,b);
-      this -> weight[aa-1][bb-1] = 1;
+      this -> weight[a-1][b-1] = 1;
+      this -> weight[b-1][a-1] = 1;
     }
     
     num++;
@@ -83,29 +82,36 @@ void Graph::delete_node(int i){
 }
 
 void Graph::merge_nodes(int a, int b){
-  int i = MIN(a,b);
-  int j = MAX(a,b);
-
-  REP(k, i){
-    this->weight[k][i] += this->weight[k][j];
-  }
-
-  FOR(k, i, j){
-    this->weight[i][k] += this->weight[k][j];
-  }
-
-  FOR(k, j, this->num_nodes){
-    this->weight[i][k] += this->weight[j][k];
-  }
-
-  // to do: modify flags
+  if(b < a) SWAP(int, a,b);
   
-  this->delete_node(j);
+  REP(k, this->num_nodes){
+    if(k == a || k == b) continue;
+
+    this->weight[k][a] += this->weight[k][b];
+    this->weight[a][k] = this->weight[k][a];
+
+    if(this->flag[b][k] == -1) this->forbid(a,k);
+  }
+
+  this->delete_node(b);
   
   return;
 }
 
-void Graph::show(){
+void Graph::forbid(int a, int b){
+  this->flag[a][b] = -1;
+  this->flag[b][a] = -1;
+  return;
+}
+
+void Graph::permanent(int a, int b){
+  this->flag[a][b] = 1;
+  this->flag[b][a] = 1;
+  return;
+}
+
+
+void Graph::show () const{
   int n = this->num_nodes;
   
   FOR(i, 0, n){
@@ -117,4 +123,26 @@ void Graph::show(){
   }
 
   return;
+}
+
+
+bool Graph::conflict_triple (vector <int>& triple) const{
+
+  FOR(u, 0, this->num_nodes) FOR(v, 0, this->num_nodes){
+    if (u == v || this->weight[u][v] <= 0 || this->flag[u][v] == -1) continue;
+
+    FOR(w, 0, this->num_nodes){
+      if(u == w || v == w) continue;
+      
+      if(this->weight[u][w] > 0 && this->flag[u][w] >= 0 && (this->weight[v][w] <= 0 || this->flag[v][w] == -1)){
+	triple.clear();
+	triple.push_back(u);
+	triple.push_back(v);
+	triple.push_back(w);
+	return true;
+      }
+    }
+  }
+
+  return false;
 }
