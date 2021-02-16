@@ -1,1 +1,1 @@
-void DataReduction(Graph G, int obj);
+void reduction(Graph G, int obj);
