@@ -5,7 +5,7 @@
 
 #include "main.h"
 #include "graph.h"
-#inlucde "solver.h"
+#include "solver.h"
 
 
 using namespace std;

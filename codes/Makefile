@@ -3,7 +3,7 @@ CFLAGS = -I${HOME}/local/include -std=c++11 -O3
 
 
 # COMPILE
-all: main.o graph.o
+all: main.o graph.o solver.o
 	$(CC) -o clusteredit main.o graph.o solver.o -lm
 
 main.o: main.cpp main.h graph.h solver.h
