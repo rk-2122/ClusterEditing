@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <string>
 
 #include "cmdline.h"
 
@@ -14,7 +15,7 @@ using namespace std;
 int main(int argc, char *argv[]){
   // parser
   cmdline::parser op;
-  op.add<char *>("input", 'i', "input file name", false);
+  op.add<string>("input", 'i', "input file name", false);
   op.add("help", 0, "print help");
 
   if (!op.parse(argc, argv)||op.exist("help")){
@@ -22,17 +23,19 @@ int main(int argc, char *argv[]){
     return 0;
   }
 
-
-
   // input
   Graph Gin;
-  
-  if(op.exist("input")) Gin = Graph(op.get<char *>("input"));
+
+  if(op.exist("input")){
+    const char *fn = op.get<string>("input").c_str();
+    Gin = Graph(fn);
+  }
   else Gin = Graph("../instances/exact/exact001.gr");
 
-  Gin.show();
-  Gin.merge_nodes(0,9);
-  Gin.show();
+    
+  // Gin.show();
+  // Gin.merge_nodes(0,9);
+  // Gin.show();
   
   return 0;
   
