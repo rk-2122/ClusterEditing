@@ -4,5 +4,7 @@
 #include "graph.h"
 
 
-void reduction(Graph G, int obj) {
+void reduction(Graph& G, int& obj) {
+
+  return;
 }
