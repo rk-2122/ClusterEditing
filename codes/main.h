@@ -8,3 +8,4 @@
 #define dumpl(x) cerr<<#x<<"="<<x<<endl
 #define dump_vec(a)  for(const auto& e : a) {cerr << e << std::endl; }
 
+typedef std::pair<int, int> edge; 
