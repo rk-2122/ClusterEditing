@@ -107,7 +107,7 @@ void Graph::delete_nodes(vector <int> U, vector <edge>& sol, const Graph &G_orig
   sort(U.begin(), U.end());
 
   REP(i, U.size()){
-    j = i+1;
+    int j = i+1;
     REP(k, this->num_nodes){
       if(k == U[i]) continue;
 

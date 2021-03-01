@@ -10,14 +10,14 @@ class Graph{
   Graph(int n);  // constructor with n nodes
   Graph(const char *filename); // constructor from the input file
 
-  void delete_node(int i, vector <edge>& sol, const Graph &G_orig);  // i is the current index
-  void delete_nodes(std::vector <int> U, vector <edge>& sol, const Graph &G_orig);
+  void delete_node(int i, std::vector <edge>& sol, const Graph &G_orig);  // i is the current index
+  void delete_nodes(std::vector <int> U, std::vector <edge>& sol, const Graph &G_orig);
 
   // merge nodes a and b (current indices), return its cost
-  int merge_nodes(int a, int b, vector <edge> & sol, const Graph &G_orig);
+  int merge_nodes(int a, int b, std::vector <edge> & sol, const Graph &G_orig);
 
-  void forbid(int a, int b, vector <edge>& sol, const Graph &G_orig); // a,b: current indices
-  void permanent(int a, int b, vector <edge>& sol, const Graph &G_orig); // a,b: current indices
+  void forbid(int a, int b, std::vector <edge>& sol, const Graph &G_orig); // a,b: current indices
+  void permanent(int a, int b, std::vector <edge>& sol, const Graph &G_orig); // a,b: current indices
   void delete_edge(int a, int b); // a,b: current indices
   void add_edge(int a, int b); // a,b: current indicies
 

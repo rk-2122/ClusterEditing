@@ -32,13 +32,13 @@ int main(int argc, char *argv[]){
   }
   else Gin = Graph("../instances/exact/exact001.gr");
 
-    
+
   Gin.show();
 
-  vector <int> t;
-  if(Gin.conflict_triple(t)) dump_vec(t);
+  vector <edge> sol;
+  cout << "ans: " << naive_branching(Gin, Gin, 100, sol) << endl;
 
-  
+
   return 0;
-  
+
 }
