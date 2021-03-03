@@ -32,13 +32,19 @@ int main(int argc, char *argv[]){
   }
   else Gin = Graph("../instances/exact/exact001.gr");
 
-
-  Gin.show();
-
   vector <edge> sol;
-  cout << "ans: " << naive_branching(Gin, Gin, 100, sol) << endl;
+  naive_branching(Gin, Gin, 100, sol);
 
+  show_sol(sol);
 
   return 0;
 
+}
+
+void show_sol(const vector <edge>& sol){
+  for (auto u: sol){
+    cout << u.first+1 << " " << u.second+1 << endl;
+  }
+
+  return;
 }

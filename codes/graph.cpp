@@ -32,7 +32,7 @@ Graph::Graph(const char *filename){
 
   ifstream ifs(filename);
   string line;
-  int N, M;
+  int N;
 
   if(!ifs){
     cerr << "Error: file not opened." << endl;
@@ -60,9 +60,6 @@ Graph::Graph(const char *filename){
             this->node_names[i] = i;
             this->node_pointers[i] = i;
           }
-	      }
-	      else if(cnt == 3){
-	        M = stoi(line);
 	      }
 	      cnt++;
       }
@@ -145,6 +142,13 @@ int Graph::merge_nodes(int a, int b, vector <edge> &sol, const Graph &G_orig){
     if(k == a || k == b) continue;
     if(this->flag[b][k] == -1 && this->flag[a][k] != -1) this->forbid(a,k,sol,G_orig);
     if(this->flag[a][k] == -1 && this->flag[b][k] != -1) this->forbid(b,k,sol,G_orig);
+    if(this->flag[a][k] == 1 && this->flag[b][k] != 1) this->permanent(b,k,sol,G_orig);
+    if(this->flag[b][k] == 1 && this->flag[a][k] != 1) this->permanent(a,k,sol,G_orig);
+    if(this->flag[a][k] * this->flag[b][k] == -1) {
+      cerr << "merge error" << endl;
+      return -1;
+    }
+
     if(this->weight[k][a]*this->weight[k][b] < 0) ans += min(abs(this->weight[k][a]), abs(this->weight[k][b]));
     this->weight[k][a] += this->weight[k][b];
     this->weight[a][k] = this->weight[k][a];
@@ -164,22 +168,30 @@ int Graph::merge_nodes(int a, int b, vector <edge> &sol, const Graph &G_orig){
 }
 
 void Graph::forbid(int a, int b, vector <edge>& sol, const Graph& G_orig){
+  if(this->flag[a][b] == 1) cerr << "err: this pair cannnot be forbidden" << endl;
+  if(this->flag[a][b] == -1) cerr << "err: this pair has been already forbidden" << endl;
+
   this->flag[a][b] = -1;
   this->flag[b][a] = -1;
 
   vector <int> A, B;
-  REP(i, node_pointers.size()){
-    if(node_pointers[i] == a) A.push_back(i);
-    if(node_pointers[i] == b) B.push_back(i);
+  REP(i, this->node_pointers.size()){
+    if(this->node_pointers[i] == this->node_names[a]) A.push_back(i);
+    if(this->node_pointers[i] == this->node_names[b]) B.push_back(i);
   }
 
   for(auto i: A) for(auto j: B){
-    if (G_orig.weight[i][j] > 0) sol.push_back(make_pair(i,j));
+    if (G_orig.weight[i][j] > 0){
+      sol.push_back(make_pair(i,j));
+    }
   }
   return;
 }
 
 void Graph::permanent(int a, int b, vector <edge> & sol, const Graph &G_orig){
+  if(this->flag[a][b] == 1) cerr << "err: this pair has been already permanent" << endl;
+  if(this->flag[a][b] == -1) cerr << "err: this pair cannot be permanent" << endl;
+
   this->flag[a][b] = 1;
   this->flag[b][a] = 1;
 
@@ -210,7 +222,7 @@ void Graph::add_edge(int a, int b){
 }
 
 
-bool Graph::conflict_triple (vector <int>& triple) const{
+bool Graph::conflict_triple (vector <int>& triple) const {
   FOR(u, 0, this->num_nodes) FOR(v, 0, this->num_nodes){
     if (u == v || this->weight[u][v] <= 0 || this->flag[u][v] == -1) continue;
 

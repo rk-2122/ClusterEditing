@@ -8,4 +8,6 @@
 #define dumpl(x) cerr<<#x<<"="<<x<<endl
 #define dump_vec(a)  for(const auto& e : a) {cerr << e << std::endl; }
 
-typedef std::pair<int, int> edge; 
+typedef std::pair<int, int> edge;
+
+void show_sol(const std::vector <edge>& sol);
