@@ -1,6 +1,8 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <string>
+#include <time.h>
 
 #include "cmdline.h"
 
@@ -16,6 +18,7 @@ int main(int argc, char *argv[]){
   // parser
   cmdline::parser op;
   op.add<string>("input", 'i', "input file name", false);
+  op.add<string>("output", 'o', "output fine name", false);
   op.add("help", 0, "print help");
 
   if (!op.parse(argc, argv)||op.exist("help")){
@@ -33,13 +36,24 @@ int main(int argc, char *argv[]){
   else Gin = Graph("../instances/exact/exact001.gr");
 
   vector <edge> sol;
-  naive_branching(Gin, Gin, 100, sol);
 
-  show_sol(sol);
+  clock_t c_start = clock();
+  int obj = naive_branching(Gin, Gin, 100, sol);
+  clock_t c_end = clock();
+
+  if(DEBUG){
+    cout << op.get<string>("input") << " "<< obj << " "<< (double) (c_end - c_start)/ CLOCKS_PER_SEC << endl;
+  }
+
+  if(op.exist("output")){
+    const char *fo = op.get<string>("output").c_str();
+    write_sol(sol,fo);
+  }
 
   return 0;
 
 }
+
 
 void show_sol(const vector <edge>& sol){
   for (auto u: sol){
@@ -47,4 +61,13 @@ void show_sol(const vector <edge>& sol){
   }
 
   return;
+}
+
+void write_sol(const vector <edge>& sol, const char *fo){
+  ofstream ot(fo);
+
+  for (auto u: sol){
+    ot << u.first << " " << u.second << endl;
+  }
+  ot.close();
 }
