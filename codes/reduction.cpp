@@ -42,6 +42,7 @@ vector<int> search_clique(Graph& G, int u) {
         }
     clique.push_back(i);
     }
+    return clique;
 }
 
 /*
