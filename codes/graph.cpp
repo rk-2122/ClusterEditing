@@ -140,18 +140,47 @@ int Graph::merge_nodes(int a, int b, vector <edge> &sol, const Graph &G_orig){
 
   REP(k, this->num_nodes){
     if(k == a || k == b) continue;
-    if(this->flag[b][k] == -1 && this->flag[a][k] != -1) this->forbid(a,k,sol,G_orig);
-    if(this->flag[a][k] == -1 && this->flag[b][k] != -1) this->forbid(b,k,sol,G_orig);
-    if(this->flag[a][k] == 1 && this->flag[b][k] != 1) this->permanent(b,k,sol,G_orig);
-    if(this->flag[b][k] == 1 && this->flag[a][k] != 1) this->permanent(a,k,sol,G_orig);
+    
     if(this->flag[a][k] * this->flag[b][k] == -1) {
       cerr << "merge error" << endl;
       return -1;
     }
-
-    if(this->weight[k][a]*this->weight[k][b] < 0) ans += min(abs(this->weight[k][a]), abs(this->weight[k][b]));
-    this->weight[k][a] += this->weight[k][b];
-    this->weight[a][k] = this->weight[k][a];
+    else if(this->flag[a][k] == 0 && this->flag[b][k] == 0){
+      if(this->weight[k][a]*this->weight[k][b] < 0){
+        ans += min(abs(this->weight[k][a]), abs(this->weight[k][b]));
+      }
+      this->weight[k][a] += this->weight[k][b];
+      this->weight[a][k] = this->weight[k][a];
+    }
+    else if(this->flag[b][k] == -1 && this->flag[a][k] == 0){
+      this->forbid(a,k,sol,G_orig);
+      if(this->weight[a][k] > 0){
+        ans += this->weight[a][k];
+        this->weight[a][k] = -1;
+        this->weight[k][a] = -1;
+      }
+    }
+    else if(this->flag[a][k] == -1 && this->flag[b][k] == 0){
+      this->forbid(b,k,sol,G_orig);
+      if(this->weight[b][k] > 0){
+        ans += this->weight[b][k];
+      }
+    }
+    else if(this->flag[a][k] == 1 && this->flag[b][k] == 0){
+      this->permanent(b,k,sol,G_orig);
+      if(this->weight[b][k] < 0){
+        ans -= this->weight[b][k];
+      }
+    }
+    else if(this->flag[b][k] == 1 && this->flag[a][k] == 0){
+      this->permanent(a,k,sol,G_orig);
+      if(this->weight[a][k] < 0){
+        ans -= this->weight[a][k];
+        this->weight[a][k] = 1;
+        this->weight[k][b] = 1;
+      }
+    }
+    
   }
 
   for(int &u : this->node_pointers) if(u == this->node_names[b]) u = this->node_names[a];
@@ -196,9 +225,9 @@ void Graph::permanent(int a, int b, vector <edge> & sol, const Graph &G_orig){
   this->flag[b][a] = 1;
 
   vector <int> A, B;
-  REP(i, (int) node_pointers.size()){
-    if(node_pointers[i] == a) A.push_back(i);
-    if(node_pointers[i] == b) B.push_back(i);
+  REP(i, (int) this->node_pointers.size()){
+    if(this->node_pointers[i] == this->node_names[a]) A.push_back(i);
+    if(this->node_pointers[i] == this->node_names[b]) B.push_back(i);
   }
 
   for(auto i: A) for(auto j: B){
