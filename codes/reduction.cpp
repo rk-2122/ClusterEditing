@@ -4,48 +4,48 @@
 
 #include "main.h"
 #include "graph.h"
+#include "reduction.h"
 
 using namespace std;
 
-//頂点uがグラフGのクリークに含まれるならそのクリークを削除し,　削除した点をdelete_pに保存する.
-vector<int> delete_clique(Graph& G, int u) {
+//search clique in G
+vector<int> search_clique(Graph& G, int u) {
     int N = G.num_nodes;
-    vector<int> delete_point;
-    vector<int> N_u;    //頂点uに隣接する頂点を保存するベクター
+    vector<int> clique;
+    vector<int> N_u;
 
-    //uの隣接点を探索
+    N_u.push_back(u);
+
+    //search neighbor
     for(int i=0; i < N; i++) {
         if(u != i) {
             if(G.weight[u][i] > 0) N_u.push_back(i);
         }
     }
 
-    delete_point.push_back(u);
-    //uの隣接点の個数が0または1ならば, u及びその隣接点がクリークであるので終了. 2個以上なら隣接点がクリークになるか調べる.
-    if(N_u.size() < 1) {
-        return delete_point;
-    }else if(N_u.size() == 1) {
-        delete_point.push_back(N_u[0]);
-        return delete_point;
-    }else {
-        while(N_u.size() > 0) {
-            int p = N_u.back();
-            N_u.pop_back();
-            for(int i=0; i < N_u.size(); i++) {
-                if(G.weight[p][i] < 0) {
-                    vector<int> empty;
-                    return empty;
+    for(int i=0; i < N_u.size(); i++) {
+        for(int j=0; j < N; j++) {
+            if(i != j) {
+                bool in = any_of(N_u.begin(), N_u.end(), [&j](int x){return x == j;});
+                if(in == true) {
+                    if(G.weight[i][j] <= 0) {
+                        vector<int> empty;
+                        return empty;
+                    }
+                }else {
+                    if(G.weight[i][j] > 0) {
+                        vector<int> empty;
+                        return empty;
+                    }
                 }
             }
-            delete_point.push_back(p);
         }
-        return delete_point;
+    clique.push_back(i);
     }
 }
 
-/*頂点u, vがpermanentかforbiddenかを調べる.
-返り値が0ならグラフのreduction不可, 負ならforbidden,　
-正ならmergeでこのとき目的関数値からひくコストicpを出力.
+/*
+set permanent or forbidden for each u, v
 */
 int check_unaffordable(Graph& G, int u, int v, int& obj) {
     int N = G.num_nodes;
@@ -77,25 +77,33 @@ int check_unaffordable(Graph& G, int u, int v, int& obj) {
 }
 
 /*
-頂点のdelete, mergeによる番号の影響を考慮しない場合のグラフ削減アルゴリズム
+graph reduction
 */
-void reduction(Graph& G, int& obj) {
-  int N = G.num_nodes;
+int reduction(Graph& G, const Graph& G_orig, int obj, vector <edge>& sol) {
+  const int N = G.num_nodes;
 
   for(int u=0; u < N; u++) {
-      vector<int> clique = delete_clique(G, u);
+      vector<int> clique = search_clique(G, u);
       if(clique.size() > 0) {
-          for(int i=0; i < clique.size(); i++) {
-              G.delete_node(clique[i]);
-          }
+        G.delete_nodes(clique, sol, G);
+        return 1;
       }
       for(int v=u+1; v < N; v++) {
           int cost = check_unaffordable(G, u, v, obj);
           if(cost > 0) {
-              G.merge_nodes(u, v);
+              G.permanent(u, v, sol, G);
+              G.merge_nodes(u, v, sol, G);
               obj -= cost;
+              return 1;
           }
       }
   }
-  return;
+  return 0;
+}
+
+void cal_reduction(Graph& G, const Graph& G_orig, int obj, vector <edge>& sol) {
+    int flag = 0;
+    do {
+        flag = reduction(G, G_orig, obj, sol);
+    } while(flag == 1);
 }

@@ -11,6 +11,7 @@
 #include "solver.h"
 
 
+
 using namespace std;
 
 
@@ -36,6 +37,8 @@ int main(int argc, char *argv[]){
   else Gin = Graph("../instances/exact/exact001.gr");
 
   vector <edge> sol;
+
+  naive_branching(Gin, Gin, 100, sol);
 
   clock_t c_start = clock();
   int obj = naive_branching(Gin, Gin, 100, sol);
