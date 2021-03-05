@@ -11,7 +11,6 @@
 #include "solver.h"
 
 
-
 using namespace std;
 
 
@@ -38,8 +37,13 @@ int main(int argc, char *argv[]){
 
   vector <edge> sol;
 
-  naive_branching(Gin, Gin, 100, sol);
-
+ 
+  int t = random_pivot(Gin, Gin, sol);
+  cout << t << endl;
+  show_sol(sol);
+ 
+  return 0;
+  
   clock_t c_start = clock();
   int obj = naive_branching(Gin, Gin, 100, sol);
   clock_t c_end = clock();

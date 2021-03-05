@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include "random.hpp"
 
 #include "main.h"
 #include "graph.h"
@@ -111,4 +112,54 @@ int naive_branching(const Graph& G, const Graph& G_orig,int max_obj, vector <edg
   }
 
   return best;
+}
+
+
+int random_pivot(Graph& G, const Graph& G_orig, std::vector <edge>& sol){
+  rnd.seed(RANDOM_SEED);
+  int n = G.num_nodes;
+  vector <int> nodes;
+  REP(i, n) nodes.push_back(i);
+
+  int cost = 0;
+
+  while(n > 1){
+    int k = rnd(0, n-1);
+    int pivot = nodes[k];
+    vector <int> neighbor;
+    nodes.erase(nodes.begin()+k);
+    n--;
+
+    for(int i=n-1; i >= 0; i--){
+      if(G.weight[nodes[i]][pivot] > 0) {
+        neighbor.push_back(nodes[i]);
+        if(G.flag[nodes[i]][pivot] == 0) G.permanent(nodes[i],pivot,sol,G_orig);
+        nodes.erase(nodes.begin()+i);
+      }
+    }
+    n -= neighbor.size();
+
+    if(neighbor.size() > 1){
+      FOR(i,0, (int) neighbor.size()-1) FOR(j, i+1, (int) neighbor.size()){
+        if(G.flag[neighbor[i]][neighbor[j]] == 0) G.permanent(neighbor[i],neighbor[j],sol,G_orig);
+
+        if(G.weight[neighbor[i]][neighbor[j]] < 0){
+          cost-= G.weight[neighbor[i]][neighbor[j]];
+          G.add_edge(neighbor[i], neighbor[j]);
+        }
+      }
+    }
+    if(neighbor.size() > 0 && n > 0){
+      REP(i, (int) neighbor.size()) REP(j, n){
+        if(G.flag[neighbor[i]][nodes[j]] == 0) G.forbid(neighbor[i],nodes[j],sol,G_orig);
+        
+        if(G.weight[neighbor[i]][nodes[j]] > 0){
+          cost += G.weight[neighbor[i]][nodes[j]];
+          G.delete_edge(neighbor[i],nodes[j]);
+        }
+      }
+    }
+  }
+  
+  return cost;
 }

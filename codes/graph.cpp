@@ -103,12 +103,12 @@ void Graph::delete_node(int i, vector <edge>& sol, const Graph &G_orig){
 void Graph::delete_nodes(vector <int> U, vector <edge>& sol, const Graph &G_orig){
   sort(U.begin(), U.end());
 
-  REP(i, U.size()){
+  REP(i, (int) U.size()){
     int j = i+1;
     REP(k, this->num_nodes){
       if(k == U[i]) continue;
 
-      if(j < U.size() && U[j]==k){
+      if(j < (int) U.size() && U[j]==k){
         this->permanent(U[i], k, sol, G_orig);
         j++;
       }
@@ -175,7 +175,7 @@ void Graph::forbid(int a, int b, vector <edge>& sol, const Graph& G_orig){
   this->flag[b][a] = -1;
 
   vector <int> A, B;
-  REP(i, this->node_pointers.size()){
+  REP(i, (int) this->node_pointers.size()){
     if(this->node_pointers[i] == this->node_names[a]) A.push_back(i);
     if(this->node_pointers[i] == this->node_names[b]) B.push_back(i);
   }
@@ -196,7 +196,7 @@ void Graph::permanent(int a, int b, vector <edge> & sol, const Graph &G_orig){
   this->flag[b][a] = 1;
 
   vector <int> A, B;
-  REP(i, node_pointers.size()){
+  REP(i, (int) node_pointers.size()){
     if(node_pointers[i] == a) A.push_back(i);
     if(node_pointers[i] == b) B.push_back(i);
   }
