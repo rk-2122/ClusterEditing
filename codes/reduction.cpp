@@ -52,8 +52,8 @@ int check_unaffordable(Graph& G, int u, int v, int& obj) {
     int N = G.num_nodes;
     int icf;
     int icp;
-    int sum_icf;
-    int sum_icp;
+    int sum_icf = 0;
+    int sum_icp = 0;
 
     for(int w=0; w < N; w++) {
         if(G.weight[u][w] > 0 && G.weight[v][w] > 0) {
