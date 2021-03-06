@@ -12,12 +12,12 @@ using namespace std;
 
 int naive_branching(const Graph& G, const Graph& G_orig,int max_obj, vector <edge>& sol){
 
-  if(G.num_nodes <= 1)  return 0;
+  if(G.num_nodes <= 1) return 0;
 
   if(G.num_nodes == 2){
     Graph Gnew = G;
     if(Gnew.weight[0][1] > 0 && Gnew.flag[0][1] == 0) Gnew.permanent(0, 1, sol, G_orig);
-    if(Gnew.weight[0][1] <= 0 && G.flag[0][1] == 0) Gnew.forbid(0, 1, sol, G_orig);
+    if(Gnew.weight[0][1] <= 0 && Gnew.flag[0][1] == 0) Gnew.forbid(0, 1, sol, G_orig);
     return 0;
   }
 
@@ -42,7 +42,7 @@ int naive_branching(const Graph& G, const Graph& G_orig,int max_obj, vector <edg
   int w = triple[2];
 
   // merge u, v, & w
-  if(G.flag[v][w] != -1){
+    if(G.flag[v][w] != -1){
     Graph Gnext = G;
 
     int a = u, b = v, c = w;
@@ -59,6 +59,7 @@ int naive_branching(const Graph& G, const Graph& G_orig,int max_obj, vector <edg
     if(tmp == -1) cerr << "err" << endl;
     t += tmp;
     tmp = Gnext.merge_nodes(a, b, best_sol, G_orig);
+
     if(tmp == -1) cerr << "err" << endl;
     t += tmp;
 
@@ -81,7 +82,7 @@ int naive_branching(const Graph& G, const Graph& G_orig,int max_obj, vector <edg
     t += tmp;
     
     int tt = naive_branching(Gnext, G_orig, max_obj-t, tmp_sol);
-    if (tt != -1 && best > t + tt){
+    if (tt != -1 && (best == -1 || best > t + tt)){
       best = t+tt;
       best_sol.clear();
       best_sol = tmp_sol;
@@ -100,7 +101,7 @@ int naive_branching(const Graph& G, const Graph& G_orig,int max_obj, vector <edg
     Gnext.delete_edge(v,u);
 
     int tt = naive_branching(Gnext, G_orig, max_obj-t, tmp_sol);
-    if (tt != -1 && best > t + tt){
+    if (tt != -1 && (best == -1 || best > t + tt)){
       best = t+tt;
       best_sol.clear();
       best_sol = tmp_sol;

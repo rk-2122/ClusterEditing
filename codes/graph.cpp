@@ -180,6 +180,10 @@ int Graph::merge_nodes(int a, int b, vector <edge> &sol, const Graph &G_orig){
         this->weight[k][b] = 1;
       }
     }
+    else if(this->flag[b][k] * this->flag[a][k] == 1){
+        this->weight[a][k] += this->weight[b][k];
+        this->weight[k][a] = this->weight[a][k];
+    }
     
   }
 

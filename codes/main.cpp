@@ -37,12 +37,13 @@ int main(int argc, char *argv[]){
 
   vector <edge> sol;
 
- 
+  /*
   int t = random_pivot(Gin, Gin, sol);
   cout << t << endl;
   show_sol(sol);
  
   return 0;
+  */
   
   clock_t c_start = clock();
   int obj = naive_branching(Gin, Gin, 100, sol);
@@ -58,7 +59,6 @@ int main(int argc, char *argv[]){
   }
 
   return 0;
-
 }
 
 
@@ -74,7 +74,7 @@ void write_sol(const vector <edge>& sol, const char *fo){
   ofstream ot(fo);
 
   for (auto u: sol){
-    ot << u.first << " " << u.second << endl;
+    ot << u.first+1 << " " << u.second+1 << endl;
   }
   ot.close();
 }
