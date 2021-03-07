@@ -66,6 +66,7 @@ int naive_branching(const Graph& G, const Graph& G_orig,int max_obj, vector <edg
     int tt = naive_branching(Gnext, G_orig, max_obj+G.weight[v][w], best_sol);
     if (tt != -1){
       best = tt + t - G.weight[v][w];
+      if(best < max_obj) max_obj = best;
     }
   }
 
@@ -73,36 +74,32 @@ int naive_branching(const Graph& G, const Graph& G_orig,int max_obj, vector <edg
   if(G.flag[u][w] != 1){
     Graph Gnext = G;
     vector <edge> tmp_sol;
-    
-    int t = G.weight[u][w];
-    Gnext.forbid(u,w, tmp_sol, G_orig);
-    Gnext.delete_edge(u,w);
-    int tmp = Gnext.merge_nodes(u,v, tmp_sol, G_orig);
-    if(tmp == -1) cerr << "err" << endl;
-    t += tmp;
-    
-    int tt = naive_branching(Gnext, G_orig, max_obj-t, tmp_sol);
-    if (tt != -1 && (best == -1 || best > t + tt)){
-      best = t+tt;
+
+    if(G.flag[u][w] == 0) Gnext.forbid(u,w, tmp_sol, G_orig);
+    if(G.flag[v][w] == 0) Gnext.forbid(v,w, tmp_sol, G_orig);
+    if(G.flag[u][v] == 0) Gnext.permanent(u,v, tmp_sol, G_orig);
+    int t = Gnext.merge_nodes(u,v, tmp_sol, G_orig);
+    if(t == -1) cerr << "err" << endl;
+
+
+    int tt = naive_branching(Gnext, G_orig, max_obj-G.weight[u][w], tmp_sol);
+    if (tt != -1 && (best == -1 || best > tt + G.weight[u][w])){
+      best = tt + G.weight[u][w];
+      if(best < max_obj) max_obj = best;
       best_sol.clear();
       best_sol = tmp_sol;
     }
   }
 
-  // forbid u & v and u & w and v & w
-  if(G.flag[u][w] != 1 && G.flag[u][v] != 1){
+  // forbid u & v 
+  if(G.flag[u][v] != 1){
     Graph Gnext = G;
     vector <edge> tmp_sol;
-    int t = G.weight[u][v] + G.weight[u][w];
-    Gnext.forbid(u,w, tmp_sol, G_orig);
     Gnext.forbid(u,v, tmp_sol, G_orig);
-    if(G.flag[v][w] == 0) Gnext.forbid(v,w, tmp_sol, G_orig);
-    Gnext.delete_edge(u,w);
-    Gnext.delete_edge(v,u);
-
-    int tt = naive_branching(Gnext, G_orig, max_obj-t, tmp_sol);
-    if (tt != -1 && (best == -1 || best > t + tt)){
-      best = t+tt;
+    
+    int tt = naive_branching(Gnext, G_orig, max_obj-G.weight[u][v], tmp_sol);
+    if (tt != -1 && (best == -1 || best > tt + G.weight[u][v])){
+      best = tt + G.weight[u][v];
       best_sol.clear();
       best_sol = tmp_sol;
     }
