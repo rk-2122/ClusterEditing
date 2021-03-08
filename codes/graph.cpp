@@ -254,6 +254,12 @@ void Graph::add_edge(int a, int b){
   return;
 }
 
+void Graph::flip_edge(int a, int b){
+  this->weight[a][b] *= -1;
+  this->weight[b][a] *= -1;
+  return;
+}
+
 
 bool Graph::conflict_triple (vector <int>& triple) const {
   FOR(u, 0, this->num_nodes) FOR(v, 0, this->num_nodes){

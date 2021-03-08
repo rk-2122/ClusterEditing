@@ -20,6 +20,7 @@ class Graph{
   void permanent(int a, int b, std::vector <edge>& sol, const Graph &G_orig); // a,b: current indices
   void delete_edge(int a, int b); // a,b: current indices
   void add_edge(int a, int b); // a,b: current indicies
+  void flip_edge(int a, int b); // a,b: current indicies
 
 
   // return false if no conflict triple exists,
