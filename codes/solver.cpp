@@ -40,7 +40,7 @@ int naive_branching(const Graph& G, const Graph& G_orig,int max_obj, vector <edg
   int u = triple[0];
   int v = triple[1];
   int w = triple[2];
-/*
+
   // merge u, v, & w
   if(G.flag[v][w] != -1){
     Graph Gnext = G;
@@ -67,10 +67,10 @@ int naive_branching(const Graph& G, const Graph& G_orig,int max_obj, vector <edg
     int tt = naive_branching(Gnext, G_orig, max_obj+G.weight[v][w], best_sol);
     if (tt != -1){
       best = tt + t - G.weight[v][w];
-      //if(best < max_obj) max_obj = best;
+      if(best < max_obj) max_obj = best;
     }
   }
-*/
+
   // merge u & v, and forbid u & w and v & w
   if(G.flag[u][w] != 1){
     Graph Gnext = G;
@@ -86,7 +86,7 @@ int naive_branching(const Graph& G, const Graph& G_orig,int max_obj, vector <edg
     int tt = naive_branching(Gnext, G_orig, max_obj-G.weight[u][w], tmp_sol);
     if (tt != -1 && (best == -1 || best > t+ tt + G.weight[u][w])){
       best = t + tt + G.weight[u][w];
-      //if(best < max_obj) max_obj = best;
+      if(best < max_obj) max_obj = best;
       best_sol.clear();
       best_sol = tmp_sol;
     }

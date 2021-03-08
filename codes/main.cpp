@@ -36,29 +36,28 @@ int main(int argc, char *argv[]){
   else Gin = Graph("../instances/exact/exact001.gr");
 
   clock_t c_start = clock();
-  /*
+  
   vector <edge> sol1;
-
   int obj1 = random_pivot(Gin, Gin, sol1);
-  */  
+
   vector <edge> sol2;  
-  int obj2 = naive_branching(Gin, Gin, 300, sol2);
+  int obj2 = naive_branching(Gin, Gin, obj1, sol2);
   
   clock_t c_end = clock();
-  /*
-  if (obj1 > obj2){
+  
+  if (obj1 > obj2 && obj2 != -1){
     obj1 = obj2;
     sol1 = sol2;
   }
-  */
+  
 
   if(DEBUG){
-    cout << op.get<string>("input") << " "<< obj2 << " "<< (double) (c_end - c_start)/ CLOCKS_PER_SEC << endl;
+    cout << op.get<string>("input") << " "<< obj1 << " "<< (double) (c_end - c_start)/ CLOCKS_PER_SEC << endl;
   }
 
   if(op.exist("output")){
     const char *fo = op.get<string>("output").c_str();
-    write_sol(sol2,fo);
+    write_sol(sol1,fo);
   }
 
   return 0;
