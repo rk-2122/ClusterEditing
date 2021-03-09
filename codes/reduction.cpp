@@ -26,8 +26,7 @@ vector<int> search_clique(const Graph& G, const int u) {
     for(int i=0; i < N_u.size(); i++) {
         for(int j=0; j < N; j++) {
             if(N_u[i] != j) {
-                bool in = any_of(N_u.begin(), N_u.end(), [&j](int x){return x == j;});
-                if(in == true) {
+                if(G.weight[u][j] > 0) {
                     if(G.weight[i][j] <= 0) {
                         vector<int> empty;
                         return empty;
@@ -76,7 +75,7 @@ int check_unaffordable(const Graph& G, const int u, const int v, const int obj) 
         return -1;
     }
 
-    return -1;
+    return 0;
 }
 
 /*
