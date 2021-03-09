@@ -39,18 +39,18 @@ int main(int argc, char *argv[]){
   //////////////////// begin
   clock_t c_start = clock();
   
-  vector <edge> sol;
   Graph G = Gin;
-  cal_reduction(G, Gin, 100, sol);
+
+  vector <edge> sol1;
+  int obj1 = random_pivot(G, Gin, sol1);
+  cout << "random pivot:" << obj1 << endl;
+
+  vector <edge> sol2;
+  int obj2 = cal_reduction(G, Gin, obj1, sol2);
 
   cout << "reduction:" << Gin.num_nodes << ", " << G.num_nodes << endl;
 
-  
-  vector <edge> sol1;
-  int obj1 = random_pivot(G, Gin, sol1);
-
-  vector <edge> sol2;  
-  int obj2 = naive_branching(G, Gin, obj1, sol2);
+  obj2 += naive_branching(G, Gin, obj1, sol2);
   
   if (obj1 > obj2 && obj2 != -1){
     obj1 = obj2;
