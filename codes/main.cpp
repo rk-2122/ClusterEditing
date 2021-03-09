@@ -9,6 +9,7 @@
 #include "main.h"
 #include "graph.h"
 #include "solver.h"
+#include "reduction.h"
 
 
 using namespace std;
@@ -35,21 +36,32 @@ int main(int argc, char *argv[]){
   }
   else Gin = Graph("../instances/exact/exact001.gr");
 
+  //////////////////// begin
   clock_t c_start = clock();
   
+  vector <edge> sol;
+  Graph G = Gin;
+  cal_reduction(G, Gin, 100, sol);
+
+  cout << "reduction:" << Gin.num_nodes << ", " << G.num_nodes << endl;
+
+  
   vector <edge> sol1;
-  int obj1 = random_pivot(Gin, Gin, sol1);
+  int obj1 = random_pivot(G, Gin, sol1);
 
   vector <edge> sol2;  
-  int obj2 = naive_branching(Gin, Gin, obj1, sol2);
-  
-  clock_t c_end = clock();
+  int obj2 = naive_branching(G, Gin, obj1, sol2);
   
   if (obj1 > obj2 && obj2 != -1){
     obj1 = obj2;
     sol1 = sol2;
   }
   
+  clock_t c_end = clock();
+  ////////////////// end 
+
+
+ 
 
   if(DEBUG){
     cout << op.get<string>("input") << " "<< obj1 << " "<< (double) (c_end - c_start)/ CLOCKS_PER_SEC << endl;

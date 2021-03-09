@@ -9,7 +9,7 @@
 using namespace std;
 
 //search clique in G
-vector<int> search_clique(Graph& G, int u) {
+vector<int> search_clique(const Graph& G, const int u) {
     int N = G.num_nodes;
     vector<int> clique;
     vector<int> N_u;
@@ -25,7 +25,7 @@ vector<int> search_clique(Graph& G, int u) {
 
     for(int i=0; i < N_u.size(); i++) {
         for(int j=0; j < N; j++) {
-            if(i != j) {
+            if(N_u[i] != j) {
                 bool in = any_of(N_u.begin(), N_u.end(), [&j](int x){return x == j;});
                 if(in == true) {
                     if(G.weight[i][j] <= 0) {
@@ -48,7 +48,7 @@ vector<int> search_clique(Graph& G, int u) {
 /*
 set permanent or forbidden for each u, v
 */
-int check_unaffordable(Graph& G, int u, int v, int& obj) {
+int check_unaffordable(const Graph& G, const int u, const int v, const int obj) {
     int N = G.num_nodes;
     int icf;
     int icp;
@@ -75,36 +75,41 @@ int check_unaffordable(Graph& G, int u, int v, int& obj) {
     }else if(icp > obj) {
         return -1;
     }
+
+    return -1;
 }
 
 /*
 graph reduction
 */
-int reduction(Graph& G, const Graph& G_orig, int obj, vector <edge>& sol) {
+int reduction(Graph& G, const Graph& G_orig, const int obj, vector <edge>& sol) {
   const int N = G.num_nodes;
 
   for(int u=0; u < N; u++) {
       vector<int> clique = search_clique(G, u);
       if(clique.size() > 0) {
         G.delete_nodes(clique, sol, G);
-        return 1;
+        return 0;
       }
       for(int v=u+1; v < N; v++) {
           int cost = check_unaffordable(G, u, v, obj);
           if(cost > 0) {
-              G.permanent(u, v, sol, G);
+              if (G.flag[u][v] == 0) G.permanent(u, v, sol, G);
               G.merge_nodes(u, v, sol, G);
-              obj -= cost;
-              return 1;
+              return cost;
           }
       }
   }
-  return 0;
+  return -1;
 }
 
-void cal_reduction(Graph& G, const Graph& G_orig, int obj, vector <edge>& sol) {
-    int flag = 0;
+int cal_reduction(Graph& G, const Graph& G_orig, const int obj, vector <edge>& sol) {
+    int cost = 0;
+    int flag;
     do {
-        flag = reduction(G, G_orig, obj, sol);
-    } while(flag == 1);
+        cost += flag;
+        flag = reduction(G, G_orig, obj, sol);        
+    } while(flag != -1);
+
+    return cost;
 }
