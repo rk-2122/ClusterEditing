@@ -109,11 +109,11 @@ void Graph::delete_nodes(vector <int> U, vector <edge>& sol, const Graph &G_orig
       if(k == U[i]) continue;
 
       if(j < (int) U.size() && U[j]==k){
-        this->permanent(U[i], k, sol, G_orig);
+        if(this->flag[U[i]][k] == 0) this->permanent(U[i], k, sol, G_orig);
         j++;
       }
       else{
-        this->forbid(U[i], k, sol, G_orig);
+        if(this->flag[U[i]][k] == 0) this->forbid(U[i], k, sol, G_orig);
       }
     }
   }
