@@ -50,12 +50,17 @@ int main(int argc, char *argv[]){
 
   cout << "reduction:" << Gin.num_nodes << ", " << G.num_nodes << endl;
 
+  obj2 += random_pivot(G,Gin,sol2);
+
+  /*
   obj2 += naive_branching(G, Gin, obj1, sol2);
-  
-  if (obj1 > obj2 && obj2 != -1){
+  */
+
+ // if (obj1 > obj2 && obj2 != -1){
     obj1 = obj2;
     sol1 = sol2;
-  }
+  //}
+  
   
   clock_t c_end = clock();
   ////////////////// end 
