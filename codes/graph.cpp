@@ -262,10 +262,10 @@ void Graph::flip_edge(int a, int b){
 
 
 bool Graph::conflict_triple (vector <int>& triple) const {
-  FOR(u, 0, this->num_nodes) FOR(v, 0, this->num_nodes){
+  FOR(u, 0, this->num_nodes) FOR(v, 0, this->num_nodes-1){
     if (u == v || this->weight[u][v] <= 0 || this->flag[u][v] == -1) continue;
 
-    FOR(w, 0, this->num_nodes){
+    FOR(w, v+1, this->num_nodes){
       if(u == w || v == w) continue;
 
       if(this->weight[u][w] > 0 && this->flag[u][w] >= 0 && (this->weight[v][w] <= 0 || this->flag[v][w] == -1)){
