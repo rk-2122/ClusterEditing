@@ -42,7 +42,7 @@ int naive_branching(const Graph& G, const Graph& G_orig,int max_obj, vector <edg
   FOR(u, 0, G.num_nodes-1) FOR(v, u+1, G.num_nodes){
     if(G.weight[u][v] <= 0 || G.flag[u][v] != 0) continue;
     
-    cnt = 0;
+    int cnt = 0;
     bool merge_flag = true;
     FOR(z, 0, G.num_nodes){
       if(u == z || v == z) continue;

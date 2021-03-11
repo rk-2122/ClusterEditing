@@ -58,6 +58,8 @@ int check_unaffordable(const Graph& G, const int u, const int v, const int obj) 
     int sum_icp = 0;
 
     for(int w=0; w < N; w++) {
+        if(u == w || v == w) continue;
+
         if(G.weight[u][w] > 0 && G.weight[v][w] > 0) {
             sum_icf += min(G.weight[u][w], G.weight[v][w]);
         }
@@ -86,6 +88,7 @@ graph reduction
 */
 int reduction(Graph& G, const Graph& G_orig, const int obj, vector <edge>& sol) {
     int N = G.num_nodes;
+    if(obj < 0) return -1;
 
     for(int u=0; u < N; u++) {
         vector<int> clique; 
@@ -98,16 +101,14 @@ int reduction(Graph& G, const Graph& G_orig, const int obj, vector <edge>& sol) 
             G.delete_node(u, sol ,G_orig);
             return 0;
         }
-        
     }
-
 
     for(int u=0; u < N-1; u++) {
       for(int v=u+1; v < N; v++) {
           int cost = check_unaffordable(G, u, v, obj);
           if(cost > 0) {
-              if (G.flag[u][v] == 0) G.permanent(u, v, sol, G);
-              G.merge_nodes(u, v, sol, G);
+              if (G.flag[u][v] == 0) G.permanent(u, v, sol, G_orig);
+              G.merge_nodes(u, v, sol, G_orig);
               return cost;
           }
       }
@@ -121,8 +122,8 @@ int cal_reduction(Graph& G, const Graph& G_orig, const int obj, vector <edge>& s
     int flag = 0;
     do {
         cost += flag;
-        flag = reduction(G, G_orig, obj, sol);    
-    } while(flag != -1);
+        flag = reduction(G, G_orig, obj-cost, sol);    
+    } while(flag != -1 && G.num_nodes >= 3);
 
     return cost;
 }
