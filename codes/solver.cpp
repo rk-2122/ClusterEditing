@@ -34,9 +34,48 @@ int naive_branching(const Graph& G, const Graph& G_orig,int max_obj, vector <edg
 
   if(max_obj <= 0) return -1;
 
+  
   int best = -1;
   vector <edge> best_sol;
 
+  // edge branching
+  FOR(u, 0, G.num_nodes-1) FOR(v, u+1, G.num_nodes){
+    if(G.weight[u][v] <= 0 || G.flag[u][v] != 0) continue;
+    
+    cnt = 0;
+    bool merge_flag = true;
+    FOR(z, 0, G.num_nodes){
+      if(u == z || v == z) continue;
+      if((G.weight[u][z] > 0 && G.weight[v][z] <= 0) || (G.weight[u][z] <= 0 && G.weight[v][z] > 0)) cnt++;
+      if((G.flag[u][z] == -1 && G.flag[v][z] == 1) || (G.flag[u][z] == 1 && G.flag[v][z] == -1)) merge_flag = false;
+    }
+
+    if(cnt >= 3){
+      Graph Gtmp = G;
+      Gtmp.forbid(u, v, best_sol, G_orig);
+      Gtmp.flip_edge(u,v);
+      best = naive_branching(Gtmp, G_orig, max_obj-G.weight[u][v], best_sol);
+      if(best != -1){
+        best += G.weight[u][v];
+      }
+
+      if(merge_flag){
+        Gtmp = G;
+        vector <edge> tmpsol;
+        Gtmp.permanent(u, v, tmpsol, G_orig);
+        int mergecost = Gtmp.merge_nodes(u, v, tmpsol, G_orig);
+        int cost = naive_branching(Gtmp, G_orig, max_obj-mergecost, tmpsol);
+        if(best == -1 || cost + mergecost < best){
+          best = cost + mergecost;
+          best_sol = tmpsol;
+        }
+      }
+      if(best != -1) sol.insert(sol.end(), best_sol.begin(), best_sol.end());
+      return best;
+    }
+  }
+
+  // naive branching
   int u = triple[0];
   int v = triple[1];
   int w = triple[2];
