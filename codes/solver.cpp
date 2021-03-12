@@ -60,7 +60,9 @@ int naive_branching(const Graph& G, const Graph& G_orig,int max_obj, vector <edg
       }
 
       if(merge_flag){
-        Gtmp = G;
+        Gtmp.flag[u][v] = 0;
+        Gtmp.flag[v][u] = 0;
+        Gtmp.flip_edge(u,v);
         vector <edge> tmpsol;
         Gtmp.permanent(u, v, tmpsol, G_orig);
         int mergecost = Gtmp.merge_nodes(u, v, tmpsol, G_orig);
