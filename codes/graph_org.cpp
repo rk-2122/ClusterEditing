@@ -85,19 +85,17 @@ void Graph::delete_node(int i, vector <edge>& sol, const Graph &G_orig){
   for(int &u : this->node_pointers) if(u == this->node_names[i]) u = -1;
   REP(j, this->num_nodes){
     if(j == i) continue;
-    if(this->Flag(i,j) == 0) this->forbid(i,j,sol, G_orig);
+    if(this->flag[i][j] == 0) this->forbid(i,j,sol, G_orig);
   }
-  //this->weight.erase(this->weight.begin()+i);
-  //this->flag.erase(this->flag.begin()+i);
+  this->weight.erase(this->weight.begin()+i);
+  this->flag.erase(this->flag.begin()+i);
   this->num_nodes--;
   this->node_names.erase(this->node_names.begin()+i);
 
-  /*
   REP(j, this->num_nodes){
     this->weight[j].erase(this->weight[j].begin()+i);
     this->flag[j].erase(this->flag[j].begin()+i);
   }
-  */
 
   return;
 }
@@ -111,27 +109,25 @@ void Graph::delete_nodes(vector <int> U, vector <edge>& sol, const Graph &G_orig
       if(k == U[i]) continue;
 
       if(j < (int) U.size() && U[j]==k){
-        if(this->Flag(U[i],k) == 0) this->permanent(U[i], k, sol, G_orig);
+        if(this->flag[U[i]][k] == 0) this->permanent(U[i], k, sol, G_orig);
         j++;
       }
       else{
-        if(this->Flag(U[i],k) == 0) this->forbid(U[i], k, sol, G_orig);
+        if(this->flag[U[i]][k] == 0) this->forbid(U[i], k, sol, G_orig);
       }
     }
   }
 
   for(int i = U.size()-1; i >= 0; i--){
-    //this->weight.erase(this->weight.begin()+U[i]);
-    //this->flag.erase(this->flag.begin()+U[i]);
+    this->weight.erase(this->weight.begin()+U[i]);
+    this->flag.erase(this->flag.begin()+U[i]);
     this->num_nodes--;
     this->node_names.erase(this->node_names.begin()+U[i]);
 
-    /*
     REP(j, this->num_nodes){
       this->weight[j].erase(this->weight[j].begin()+U[i]);
       this->flag[j].erase(this->flag[j].begin()+U[i]);
     }
-    */
   }
 
   return;
@@ -140,76 +136,76 @@ void Graph::delete_nodes(vector <int> U, vector <edge>& sol, const Graph &G_orig
 
 int Graph::merge_nodes(int a, int b, vector <edge> &sol, const Graph &G_orig){
   int ans = 0;
-  if(this->node_names[b] < this->node_names[a]) SWAP(int, a,b);
+  if(b < a) SWAP(int, a,b);
 
   REP(k, this->num_nodes){
     if(k == a || k == b) continue;
     
-    if(this->Flag(a,k) * this->Flag(b,k) == -1) {
+    if(this->flag[a][k] * this->flag[b][k] == -1) {
       cerr << "merge error" << endl;
       return -1;
     }
-    else if(this->Flag(a,k) == 0 && this->Flag(b,k) == 0){
-      if(this->Weight(k,a)*this->Weight(k,b) < 0){
-        ans += min(abs(this->Weight(k,a)), abs(this->Weight(k,b)));
+    else if(this->flag[a][k] == 0 && this->flag[b][k] == 0){
+      if(this->weight[k][a]*this->weight[k][b] < 0){
+        ans += min(abs(this->weight[k][a]), abs(this->weight[k][b]));
       }
-      this->weight[this->node_names[k]][this->node_names[a]] += this->weight[this->node_names[k]][this->node_names[b]];
-      this->weight[this->node_names[a]][this->node_names[k]] = this->weight[this->node_names[k]][this->node_names[a]];
+      this->weight[k][a] += this->weight[k][b];
+      this->weight[a][k] = this->weight[k][a];
     }
-    else if(this->Flag(b,k) == -1 && this->Flag(a,k) == 0){
+    else if(this->flag[b][k] == -1 && this->flag[a][k] == 0){
       this->forbid(a,k,sol,G_orig);
-      if(this->Weight(a,k) > 0){
-        ans += this->Weight(a,k);
+      if(this->weight[a][k] > 0){
+        ans += this->weight[a][k];
+        this->weight[a][k] = -1;
+        this->weight[k][a] = -1;
       }
     }
-    else if(this->Flag(a,k) == -1 && this->Flag(b,k) == 0){
+    else if(this->flag[a][k] == -1 && this->flag[b][k] == 0){
       this->forbid(b,k,sol,G_orig);
-      if(this->Weight(b,k) > 0){
-        ans += this->Weight(b,k);
+      if(this->weight[b][k] > 0){
+        ans += this->weight[b][k];
       }
     }
-    else if(this->Flag(a,k) == 1 && this->Flag(b,k) == 0){
+    else if(this->flag[a][k] == 1 && this->flag[b][k] == 0){
       this->permanent(b,k,sol,G_orig);
-      if(this->Weight(b,k) < 0){
-        ans -= this->Weight(b,k);
+      if(this->weight[b][k] < 0){
+        ans -= this->weight[b][k];
       }
     }
-    else if(this->Flag(b,k) == 1 && this->Flag(a,k) == 0){
+    else if(this->flag[b][k] == 1 && this->flag[a][k] == 0){
       this->permanent(a,k,sol,G_orig);
-      if(this->Weight(a,k) < 0){
-        ans -= this->Weight(a,k);
+      if(this->weight[a][k] < 0){
+        ans -= this->weight[a][k];
+        this->weight[a][k] = 1;
+        this->weight[k][b] = 1;
       }
     }
-    else if(this->Flag(b,k) * this->Flag(a,k) == 1){
-        this->weight[this->node_names[a]][this->node_names[k]] += this->weight[this->node_names[b]][this->node_names[k]];
-        this->weight[this->node_names[k]][this->node_names[a]] = this->weight[this->node_names[a]][this->node_names[k]];
+    else if(this->flag[b][k] * this->flag[a][k] == 1){
+        this->weight[a][k] += this->weight[b][k];
+        this->weight[k][a] = this->weight[a][k];
     }
     
   }
 
   for(int &u : this->node_pointers) if(u == this->node_names[b]) u = this->node_names[a];
-  /*
   this->weight.erase(this->weight.begin()+b);
   this->flag.erase(this->flag.begin()+b);
-  */
   this->num_nodes--;
   this->node_names.erase(this->node_names.begin()+b);
 
-  /*
   REP(j, this->num_nodes){
     this->weight[j].erase(this->weight[j].begin()+b);
     this->flag[j].erase(this->flag[j].begin()+b);
   }
-  */
   return ans;
 }
 
 void Graph::forbid(int a, int b, vector <edge>& sol, const Graph& G_orig){
-  if(this->Flag(a,b) == 1) cerr << "err: this pair cannnot be forbidden" << endl;
-  if(this->Flag(a,b) == -1) cerr << "err: this pair has been already forbidden" << endl;
+  if(this->flag[a][b] == 1) cerr << "err: this pair cannnot be forbidden" << endl;
+  if(this->flag[a][b] == -1) cerr << "err: this pair has been already forbidden" << endl;
 
-  this->flag[this->node_names[a]][this->node_names[b]] = -1;
-  this->flag[this->node_names[b]][this->node_names[a]] = -1;
+  this->flag[a][b] = -1;
+  this->flag[b][a] = -1;
 
   vector <int> A, B;
   REP(i, (int) this->node_pointers.size()){
@@ -218,7 +214,7 @@ void Graph::forbid(int a, int b, vector <edge>& sol, const Graph& G_orig){
   }
 
   for(auto i: A) for(auto j: B){
-    if (G_orig.Weight(i,j) > 0){
+    if (G_orig.weight[i][j] > 0){
       sol.push_back(make_pair(i,j));
     }
   }
@@ -226,11 +222,11 @@ void Graph::forbid(int a, int b, vector <edge>& sol, const Graph& G_orig){
 }
 
 void Graph::permanent(int a, int b, vector <edge> & sol, const Graph &G_orig){
-  if(this->Flag(a,b) == 1) cerr << "err: this pair has been already permanent" << endl;
-  if(this->Flag(a,b) == -1) cerr << "err: this pair cannot be permanent" << endl;
+  if(this->flag[a][b] == 1) cerr << "err: this pair has been already permanent" << endl;
+  if(this->flag[a][b] == -1) cerr << "err: this pair cannot be permanent" << endl;
 
-  this->flag[this->node_names[a]][this->node_names[b]] = 1;
-  this->flag[this->node_names[b]][this->node_names[a]] = 1;
+  this->flag[a][b] = 1;
+  this->flag[b][a] = 1;
 
   vector <int> A, B;
   REP(i, (int) this->node_pointers.size()){
@@ -239,52 +235,40 @@ void Graph::permanent(int a, int b, vector <edge> & sol, const Graph &G_orig){
   }
 
   for(auto i: A) for(auto j: B){
-    if (G_orig.Weight(i,j) < 0) sol.push_back(make_pair(i,j));
+    if (G_orig.weight[i][j] < 0) sol.push_back(make_pair(i,j));
   }
   return;
 }
 
 
 void Graph::delete_edge(int a, int b){
-  this->weight[this->node_names[a]][this->node_names[b]] = -1;
-  this->weight[this->node_names[b]][this->node_names[a]] = -1;
+  this->weight[a][b] = -1;
+  this->weight[b][a] = -1;
   return;
 }
 
 
 void Graph::add_edge(int a, int b){
-  this->weight[this->node_names[a]][this->node_names[b]] = 1;
-  this->weight[this->node_names[b]][this->node_names[a]] = 1;
+  this->weight[a][b] = 1;
+  this->weight[b][a] = 1;
   return;
 }
 
 void Graph::flip_edge(int a, int b){
-  this->weight[this->node_names[a]][this->node_names[b]] *= -1;
-  this->weight[this->node_names[b]][this->node_names[a]] *= -1;
+  this->weight[a][b] *= -1;
+  this->weight[b][a] *= -1;
   return;
 }
 
-int Graph::Weight(int a, int b) const{
-  return this->weight[this->node_names[a]][this->node_names[b]];
-}
-
-int Graph::Flag(int a, int b) const{
-  return this->flag[this->node_names[a]][this->node_names[b]];
-}
-
-void Graph::reset_flag(int a, int b) {
-  this->flag[this->node_names[a]][this->node_names[b]] = 0;
-  this->flag[this->node_names[b]][this->node_names[a]] = 0;
-}
 
 bool Graph::conflict_triple (vector <int>& triple) const {
   FOR(u, 0, this->num_nodes) FOR(v, 0, this->num_nodes-1){
-    if (u == v || this->Weight(u,v) <= 0 || this->Flag(u,v) == -1) continue;
+    if (u == v || this->weight[u][v] <= 0 || this->flag[u][v] == -1) continue;
 
     FOR(w, v+1, this->num_nodes){
       if(u == w || v == w) continue;
 
-      if(this->Weight(u,w) > 0 && this->Flag(u,w) >= 0 && (this->Weight(v,w) <= 0 || this->Flag(v,w) == -1)){
+      if(this->weight[u][w] > 0 && this->flag[u][w] >= 0 && (this->weight[v][w] <= 0 || this->flag[v][w] == -1)){
 	      triple.clear();
 	      triple.push_back(u);
 	      triple.push_back(v);
@@ -303,7 +287,7 @@ void Graph::show () const{
   FOR(i, 0, n){
     cout << i << ": ";
     FOR(j, 0, n){
-      cout << j << "," << this->Weight(i,j) << "; ";
+      cout << j << "," << this->weight[i][j] << "; ";
     }
     cout << endl;
   }

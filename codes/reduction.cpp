@@ -22,7 +22,7 @@ void search_clique(const Graph& G, const int u, vector<int>& clique) {
 
     //search neighbor
     for(int i=0; i < n; i++) {
-        if(u != i && G.weight[u][i] > 0) clique.push_back(i);
+        if(u != i && G.Weight(u,i) > 0) clique.push_back(i);
     }
 
     if(clique.size() == 1) return;
@@ -31,13 +31,13 @@ void search_clique(const Graph& G, const int u, vector<int>& clique) {
         for(int j=0; j < n; j++) {
             if(clique[i] == j || u == j)  continue;
 
-            if(G.weight[u][j] > 0) {
-                if(G.weight[clique[i]][j] <= 0){ 
+            if(G.Weight(u,j) > 0) {
+                if(G.Weight(clique[i],j) <= 0){ 
                     clique.clear();
                     return;
                 }
             }else {
-                if(G.weight[clique[i]][j] > 0){ 
+                if(G.Weight(clique[i],j) > 0){ 
                     clique.clear();
                     return;
                 }
@@ -60,16 +60,16 @@ int check_unaffordable(const Graph& G, const int u, const int v, const int obj) 
     for(int w=0; w < N; w++) {
         if(u == w || v == w) continue;
 
-        if(G.weight[u][w] > 0 && G.weight[v][w] > 0) {
-            sum_icf += min(G.weight[u][w], G.weight[v][w]);
+        if(G.Weight(u,w) > 0 && G.Weight(v,w) > 0) {
+            sum_icf += min(G.Weight(u,w), G.Weight(v,w));
         }
-        else if(G.weight[u][w] > 0 || G.weight[v][w] > 0) {
-            sum_icp += min(abs(G.weight[u][w]), abs(G.weight[v][w]));
+        else if(G.Weight(u,w) > 0 || G.Weight(v,w) > 0) {
+            sum_icp += min(abs(G.Weight(u,w)), abs(G.Weight(v,w)));
         }
     }
 
-    icf = max(0, G.weight[u][v]) + sum_icf;
-    icp = max(0, -G.weight[u][v]) + sum_icp;
+    icf = max(0, G.Weight(u,v)) + sum_icf;
+    icp = max(0, -G.Weight(u,v)) + sum_icp;
 
     if(icf > obj && icp > obj) {
         return 0;
@@ -107,7 +107,7 @@ int reduction(Graph& G, const Graph& G_orig, const int obj, vector <edge>& sol) 
       for(int v=u+1; v < N; v++) {
           int cost = check_unaffordable(G, u, v, obj);
           if(cost > 0) {
-              if (G.flag[u][v] == 0) G.permanent(u, v, sol, G_orig);
+              if (G.Flag(u,v) == 0) G.permanent(u, v, sol, G_orig);
               G.merge_nodes(u, v, sol, G_orig);
               return cost;
           }
