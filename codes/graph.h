@@ -1,3 +1,12 @@
+class MergeData{
+  public:
+    std::vector <int> flag;
+    std::vector <int> weight;
+    std::vector <int> pointers;
+
+    MergeData(int n);
+};
+
 class Graph{
   public:
     int num_nodes;
@@ -5,6 +14,7 @@ class Graph{
     std::vector <std::vector <int>> flag; // 1 -> permanent, -1 -> forbidden, 0 -> not restricted
     std::vector <int> node_names;
     std::vector <int> node_pointers;
+    std::vector <std::list <int>> neighbors;
 
     Graph();  // constructor
     Graph(int n);  // constructor with n nodes
@@ -14,7 +24,10 @@ class Graph{
     void delete_nodes(std::vector <int> U, std::vector <edge>& sol, const Graph &G_orig);
 
     // merge nodes a and b (current indices), return its cost
-    int merge_nodes(int a, int b, std::vector <edge> & sol, const Graph &G_orig);
+    int merge_nodes(int a, int b, std::vector <edge> &sol, MergeData& mg, const Graph &G_orig);
+
+    // reverse operation of merge, a is the current index and b is the original index
+    void expand_nodes(int a, int b, const MergeData& mg);
 
     void forbid(int a, int b, std::vector <edge>& sol, const Graph &G_orig); // a,b: current indices
     void permanent(int a, int b, std::vector <edge>& sol, const Graph &G_orig); // a,b: current indices
@@ -32,3 +45,5 @@ class Graph{
     // print weights
     void show() const;
 };
+
+

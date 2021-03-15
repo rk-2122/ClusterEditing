@@ -1,4 +1,5 @@
 #include <vector>
+#include <list>
 #include <iostream>
 #include <algorithm>
 #include "random.hpp"
@@ -64,7 +65,8 @@ int naive_branching(const Graph& G, const Graph& G_orig,int max_obj, vector <edg
         Gtmp.flip_edge(u,v);
         vector <edge> tmpsol;
         Gtmp.permanent(u, v, tmpsol, G_orig);
-        int mergecost = Gtmp.merge_nodes(u, v, tmpsol, G_orig);
+        MergeData mg(G_orig.num_nodes);
+        int mergecost = Gtmp.merge_nodes(u, v, tmpsol, mg, G_orig);
         int cost = naive_branching(Gtmp, G_orig, max_obj-mergecost, tmpsol);
         if((cost != -1) && (best == -1 || cost + mergecost < best)){
           best = cost + mergecost;
@@ -96,11 +98,13 @@ int naive_branching(const Graph& G, const Graph& G_orig,int max_obj, vector <edg
     if (b > c) SWAP(int, b, c);
     if (a > b) SWAP(int, a, b);
   
-    int tmp = Gnext.merge_nodes(b, c, best_sol, G_orig);
+    MergeData mg_bc(G_orig.num_nodes);
+    int tmp = Gnext.merge_nodes(b, c, best_sol, mg_bc, G_orig);
     if(tmp == -1) cerr << "err" << endl;
     t += tmp;
 
-    tmp = Gnext.merge_nodes(a, b, best_sol, G_orig);
+    MergeData mg_ab(G_orig.num_nodes);
+    tmp = Gnext.merge_nodes(a, b, best_sol, mg_ab, G_orig);
     if(tmp == -1) cerr << "err" << endl;
     t += tmp;
 
@@ -120,7 +124,9 @@ int naive_branching(const Graph& G, const Graph& G_orig,int max_obj, vector <edg
     if(G.Flag(v,w) == 0) Gnext.forbid(v,w, tmp_sol, G_orig);
     if(G.Flag(u,v) == 0) Gnext.permanent(u,v, tmp_sol, G_orig);
     Gnext.flip_edge(u,w);
-    int t = Gnext.merge_nodes(u,v, tmp_sol, G_orig);
+    
+    MergeData mg_uv(G_orig.num_nodes);
+    int t = Gnext.merge_nodes(u,v, tmp_sol, mg_uv, G_orig);
     if(t == -1) cerr << "err" << endl;
 
     int tt = naive_branching(Gnext, G_orig, max_obj-G.Weight(u,w), tmp_sol);

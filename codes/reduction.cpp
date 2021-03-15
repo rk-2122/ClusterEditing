@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <algorithm>
+#include <list>
 
 #include "main.h"
 #include "graph.h"
@@ -108,7 +109,8 @@ int reduction(Graph& G, const Graph& G_orig, const int obj, vector <edge>& sol) 
           int cost = check_unaffordable(G, u, v, obj);
           if(cost > 0) {
               if (G.Flag(u,v) == 0) G.permanent(u, v, sol, G_orig);
-              G.merge_nodes(u, v, sol, G_orig);
+              MergeData mg(G_orig.num_nodes);
+              G.merge_nodes(u, v, sol, mg, G_orig);
               return cost;
           }
       }
