@@ -48,6 +48,12 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
   if(max_obj <= 0) return -1;
 
   
+  // for naive branching
+  int a_name = G.node_names[triple[0]];
+  int b_name = G.node_names[triple[1]];
+  int c_name = G.node_names[triple[2]];
+
+
   int best = -1;
   vector <edge> best_sol;
   
@@ -104,77 +110,108 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
     }
   }
   
-  // naive branching
-  int u = triple[0];
-  int v = triple[1];
-  int w = triple[2];
+  
+  // merge a, b, & c
+  int a, b, c;
+  REP(i, G.num_nodes){
+    if(G.node_names[i] == a_name) a = i;
+    else if(G.node_names[i] == b_name) b = i;
+    else if(G.node_names[i] == c_name) c = i;
+  }
+  int w = G.Weight(b,c);
 
-  // merge u, v, & w
-  if(G.Flag(v,w) != -1){
-    Graph Gnext = G;
-
+  if(G.Flag(b,c) != -1){
     int t = 0;
-    if(Gnext.Flag(v,w) == 0) Gnext.permanent(v, w, best_sol, G_orig);
-    if(Gnext.Flag(u,v) == 0) Gnext.permanent(u, v, best_sol, G_orig);
-    if(Gnext.Flag(u,w) == 0) Gnext.permanent(u, w, best_sol, G_orig);
-    Gnext.flip_edge(v,w);
+    bool flag_ab = false, flag_ac = false, flag_bc = false;
+    if(G.Flag(a,b) == 0){
+      G.permanent(a, b, best_sol, G_orig);
+      flag_ab = true;
+    }
+    if(G.Flag(a,c) == 0){
+      G.permanent(a, c, best_sol, G_orig);
+      flag_ac = true;
+    }
+    if(G.Flag(b,c) == 0){
+      G.permanent(b, c, best_sol, G_orig);
+      flag_bc = true;
+    }
+    G.flip_edge(b,c);
     
-    int a = u, b = v, c = w;
-    if (Gnext.node_names[a] > Gnext.node_names[b]) SWAP(int, a, b);
-    if (Gnext.node_names[b] > Gnext.node_names[c]) SWAP(int, b, c);
-    if (Gnext.node_names[a] > Gnext.node_names[b]) SWAP(int, a, b);
+    if (G.node_names[a] > G.node_names[b]) SWAP(int, a, b);
+    if (G.node_names[b] > G.node_names[c]) SWAP(int, b, c);
+    if (G.node_names[a] > G.node_names[b]) SWAP(int, a, b);
   
     MergeData mg_bc(G_orig.num_nodes);
-    int tmp = Gnext.merge_nodes(b, c, best_sol, mg_bc, G_orig);
+    int tmp = G.merge_nodes(b, c, best_sol, mg_bc, G_orig);
     if(tmp == -1) cerr << "err" << endl;
     t += tmp;
     if(b > c) b--;
     if(a > c) a--;
     MergeData mg_ab(G_orig.num_nodes);
-    tmp = Gnext.merge_nodes(a, b, best_sol, mg_ab, G_orig);
+    tmp = G.merge_nodes(a, b, best_sol, mg_ab, G_orig);
     if(tmp == -1) cerr << "err" << endl;
     t += tmp;
 
-    int tt = naive_branching(Gnext, G_orig, max_obj+G.Weight(v,w), best_sol);
+    int tt = naive_branching(G, G_orig, max_obj+w, best_sol);
     if (tt != -1){
-      best = tt + t - G.Weight(v,w);
+      best = tt + t - w;
       if(best < max_obj) max_obj = best;
     }
+
+    int a_name_srt = a_name; 
+    int b_name_srt = b_name; 
+    int c_name_srt = c_name;
+    if (a_name_srt > b_name_srt) SWAP(int, a_name_srt, b_name_srt);
+    if (b_name_srt > c_name_srt) SWAP(int, b_name_srt, c_name_srt);
+    if (a_name_srt > b_name_srt) SWAP(int, a_name_srt, b_name_srt);
+    
+    G.expand_nodes(a_name_srt,b_name_srt,mg_ab);
+    G.expand_nodes(b_name_srt,c_name_srt,mg_bc);
+
+    REP(i, G.num_nodes){
+      if(G.node_names[i] == a_name) a = i;
+      else if(G.node_names[i] == b_name) b = i;
+      else if(G.node_names[i] == c_name) c = i;
+    }
+    G.flip_edge(b,c);
+    if(flag_ab) G.reset_flag(a,b);
+    if(flag_bc) G.reset_flag(b,c);
+    if(flag_ac) G.reset_flag(a,c);
   }
 
-  // merge u & v, and forbid u & w and v & w
-  if(G.Flag(u,w) != 1){
+  // merge a & b, and forbid a & c and b & c
+  if(G.Flag(a,c) != 1){
     Graph Gnext = G;
     vector <edge> tmp_sol;
 
-    if(G.Flag(u,w) == 0) Gnext.forbid(u,w, tmp_sol, G_orig);
-    if(G.Flag(v,w) == 0) Gnext.forbid(v,w, tmp_sol, G_orig);
-    if(G.Flag(u,v) == 0) Gnext.permanent(u,v, tmp_sol, G_orig);
-    Gnext.flip_edge(u,w);
+    if(G.Flag(a,c) == 0) Gnext.forbid(a,c, tmp_sol, G_orig);
+    if(G.Flag(b,c) == 0) Gnext.forbid(b,c, tmp_sol, G_orig);
+    if(G.Flag(a,b) == 0) Gnext.permanent(a,b, tmp_sol, G_orig);
+    Gnext.flip_edge(a,c);
     
     MergeData mg_uv(G_orig.num_nodes);
-    int t = Gnext.merge_nodes(u,v, tmp_sol, mg_uv, G_orig);
+    int t = Gnext.merge_nodes(a,b, tmp_sol, mg_uv, G_orig);
     if(t == -1) cerr << "err" << endl;
 
-    int tt = naive_branching(Gnext, G_orig, max_obj-G.Weight(u,w), tmp_sol);
-    if (tt != -1 && (best == -1 || best > t+ tt + G.Weight(u,w))){
-      best = t + tt + G.Weight(u,w);
+    int tt = naive_branching(Gnext, G_orig, max_obj-G.Weight(a,c), tmp_sol);
+    if (tt != -1 && (best == -1 || best > t+ tt + G.Weight(a,c))){
+      best = t + tt + G.Weight(a,c);
       if(best < max_obj) max_obj = best;
       best_sol.clear();
       best_sol = tmp_sol;
     }
   }
 
-  // forbid u & v 
-  if(G.Flag(u,v) != 1){
+  // forbid a & b 
+  if(G.Flag(a,b) != 1){
     Graph Gnext = G;
     vector <edge> tmp_sol;
-    Gnext.forbid(u,v, tmp_sol, G_orig);
-    Gnext.flip_edge(u,v);
+    Gnext.forbid(a,b, tmp_sol, G_orig);
+    Gnext.flip_edge(a,b);
     
-    int tt = naive_branching(Gnext, G_orig, max_obj-G.Weight(u,v), tmp_sol);
-    if (tt != -1 && (best == -1 || best > tt + G.Weight(u,v))){
-      best = tt + G.Weight(u,v);
+    int tt = naive_branching(Gnext, G_orig, max_obj-G.Weight(a,b), tmp_sol);
+    if (tt != -1 && (best == -1 || best > tt + G.Weight(a,b))){
+      best = tt + G.Weight(a,b);
       best_sol.clear();
       best_sol = tmp_sol;
     }
