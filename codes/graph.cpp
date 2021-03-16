@@ -148,7 +148,6 @@ void Graph::delete_nodes(vector <int> U, vector <edge>& sol, const Graph &G_orig
 int Graph::merge_nodes(int a, int b, vector <edge> &sol, MergeData& mg, const Graph &G_orig){
   int ans = 0;
   if(this->node_names[b] < this->node_names[a]) SWAP(int, a,b);
-  mg = MergeData(G_orig.num_nodes);
   
   REP(k, this->num_nodes){
     mg.flag[this->node_names[k]] = this->Flag(a,k);
@@ -158,7 +157,7 @@ int Graph::merge_nodes(int a, int b, vector <edge> &sol, MergeData& mg, const Gr
     if(k == a || k == b) continue;
   
     if(this->Flag(a,k) * this->Flag(b,k) == -1) {
-      cerr << "merge error" << endl;
+      cerr << "merge error " << a << ", " << b << ", " << k << endl;
       return -1;
     }
     else if(this->Flag(a,k) == 0 && this->Flag(b,k) == 0){
@@ -181,8 +180,6 @@ int Graph::merge_nodes(int a, int b, vector <edge> &sol, MergeData& mg, const Gr
       if(this->Weight(a,k) > 0){
         ans += this->Weight(a,k);
         this->flip_edge(a,k);
-        this->neighbors[this->node_names[a]].remove(this->node_names[k]);
-        this->neighbors[this->node_names[k]].remove(this->node_names[a]);
       }
     }
     else if(this->Flag(a,k) == -1 && this->Flag(b,k) == 0){
@@ -205,8 +202,6 @@ int Graph::merge_nodes(int a, int b, vector <edge> &sol, MergeData& mg, const Gr
     else if(this->Flag(b,k) == 1 && this->Flag(a,k) == 0){
       this->permanent(a,k,sol,G_orig);
       if(this->Weight(a,k) <= 0){
-        this->neighbors[this->node_names[a]].push_back(this->node_names[k]);
-        this->neighbors[this->node_names[k]].push_back(this->node_names[a]);
         ans -= this->Weight(a,k);
         this->flip_edge(a,k);
       }
@@ -215,7 +210,6 @@ int Graph::merge_nodes(int a, int b, vector <edge> &sol, MergeData& mg, const Gr
         this->weight[this->node_names[a]][this->node_names[k]] += this->weight[this->node_names[b]][this->node_names[k]];
         this->weight[this->node_names[k]][this->node_names[a]] = this->weight[this->node_names[a]][this->node_names[k]];
     }
-    
   }
 
   REP(u, G_orig.num_nodes) if(this->node_pointers[u] == this->node_names[b]){
@@ -241,22 +235,22 @@ int Graph::merge_nodes(int a, int b, vector <edge> &sol, MergeData& mg, const Gr
 void Graph::expand_nodes(int a, int b, const MergeData& mg){
   REP(k, this->num_nodes){
     if(this->weight[this->node_names[k]][b] > 0) this->neighbors[this->node_names[k]].push_back(b);
-    if(k == a) continue;
+    if(this->node_names[k] == a) continue;
 
-    if(this->weight[this->node_names[a]][this->node_names[k]] <= 0 && mg.weight[this->node_names[k]] > 0){
-      this->neighbors[this->node_names[a]].push_back(this->node_names[k]);
-      this->neighbors[this->node_names[k]].push_back(this->node_names[a]);
+    if(this->weight[a][this->node_names[k]] <= 0 && mg.weight[this->node_names[k]] > 0){
+      this->neighbors[a].push_back(this->node_names[k]);
+      this->neighbors[this->node_names[k]].push_back(a);
     }
 
-    if(this->weight[this->node_names[a]][this->node_names[k]] > 0 && mg.weight[this->node_names[k]] <= 0){
-      this->neighbors[this->node_names[a]].remove(this->node_names[k]);
-      this->neighbors[this->node_names[k]].remove(this->node_names[a]);
+    if(this->weight[a][this->node_names[k]] > 0 && mg.weight[this->node_names[k]] <= 0){
+      this->neighbors[a].remove(this->node_names[k]);
+      this->neighbors[this->node_names[k]].remove(a);
     }
 
-    this->flag[this->node_names[a]][this->node_names[k]] = mg.flag[this->node_names[k]];
-    this->flag[this->node_names[k]][this->node_names[a]] = mg.flag[this->node_names[k]];
-    this->weight[this->node_names[a]][this->node_names[k]] = mg.weight[this->node_names[k]];
-    this->weight[this->node_names[k]][this->node_names[a]] = mg.weight[this->node_names[k]];
+    this->flag[a][this->node_names[k]] = mg.flag[this->node_names[k]];
+    this->flag[this->node_names[k]][a] = mg.flag[this->node_names[k]];
+    this->weight[a][this->node_names[k]] = mg.weight[this->node_names[k]];
+    this->weight[this->node_names[k]][a] = mg.weight[this->node_names[k]];
   }
     
   this->num_nodes++;
@@ -330,7 +324,7 @@ void Graph::flip_edge(int a, int b){
     this->neighbors[this->node_names[a]].remove(this->node_names[b]);
     this->neighbors[this->node_names[b]].remove(this->node_names[a]);
   }
-  else if(this->Weight(a,b) > 0){
+  else{
     this->neighbors[this->node_names[a]].push_back(this->node_names[b]);
     this->neighbors[this->node_names[b]].push_back(this->node_names[a]);
   }
@@ -357,7 +351,7 @@ bool Graph::conflict_triple (vector <int>& triple) const {
     if (u == v || this->Weight(u,v) <= 0 || this->Flag(u,v) == -1) continue;
 
     FOR(w, v+1, this->num_nodes){
-      if(u == w || v == w) continue;
+      if(u == w) continue;
 
       if(this->Weight(u,w) > 0 && this->Flag(u,w) >= 0 && (this->Weight(v,w) <= 0 || this->Flag(v,w) == -1)){
 	      triple.clear();

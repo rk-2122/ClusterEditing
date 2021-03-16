@@ -26,7 +26,7 @@ class Graph{
     // merge nodes a and b (current indices), return its cost
     int merge_nodes(int a, int b, std::vector <edge> &sol, MergeData& mg, const Graph &G_orig);
 
-    // reverse operation of merge, a is the current index and b is the original index
+    // reverse operation of merge, a and b are original indices
     void expand_nodes(int a, int b, const MergeData& mg);
 
     void forbid(int a, int b, std::vector <edge>& sol, const Graph &G_orig); // a,b: current indices
