@@ -233,6 +233,8 @@ int Graph::merge_nodes(int a, int b, vector <edge> &sol, MergeData& mg, const Gr
 }
 
 void Graph::expand_nodes(int a, int b, const MergeData& mg){
+  if(a > b) SWAP(int, a, b);
+  
   REP(k, this->num_nodes){
     if(this->weight[this->node_names[k]][b] > 0) this->neighbors[this->node_names[k]].push_back(b);
     if(this->node_names[k] == a) continue;
