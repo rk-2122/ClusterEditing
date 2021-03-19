@@ -129,9 +129,9 @@ void Graph::delete_nodes(vector <int> U, vector <edge>& sol, const Graph &G_orig
   for(int i = U.size()-1; i >= 0; i--){
     //this->weight.erase(this->weight.begin()+U[i]);
     //this->flag.erase(this->flag.begin()+U[i]);
+    for(int a : this->neighbors[this->node_names[U[i]]]) this->neighbors[a].remove(this->node_names[U[i]]);
     this->num_nodes--;
     this->node_names.erase(this->node_names.begin()+U[i]);
-    for(int a : this->neighbors[this->node_names[i]]) this->neighbors[a].remove(this->node_names[i]);
 
     /*
     REP(j, this->num_nodes){
@@ -181,6 +181,8 @@ int Graph::merge_nodes(int a, int b, vector <edge> &sol, MergeData& mg, const Gr
         ans += this->Weight(a,k);
         this->flip_edge(a,k);
       }
+      this->weight[this->node_names[a]][this->node_names[k]] += this->weight[this->node_names[b]][this->node_names[k]];
+      this->weight[this->node_names[k]][this->node_names[a]] = this->weight[this->node_names[a]][this->node_names[k]];
     }
     else if(this->Flag(a,k) == -1 && this->Flag(b,k) == 0){
       this->forbid(b,k,sol,G_orig);
@@ -188,6 +190,12 @@ int Graph::merge_nodes(int a, int b, vector <edge> &sol, MergeData& mg, const Gr
       this->flag[this->node_names[b]][this->node_names[k]] = 0;
       if(this->Weight(b,k) > 0){
         ans += this->Weight(b,k);
+        this->weight[this->node_names[a]][this->node_names[k]] -= this->weight[this->node_names[b]][this->node_names[k]];
+        this->weight[this->node_names[k]][this->node_names[a]] = this->weight[this->node_names[a]][this->node_names[k]];
+      }
+      else{
+        this->weight[this->node_names[a]][this->node_names[k]] += this->weight[this->node_names[b]][this->node_names[k]];
+        this->weight[this->node_names[k]][this->node_names[a]] = this->weight[this->node_names[a]][this->node_names[k]];
       }
     }
     else if(this->Flag(a,k) == 1 && this->Flag(b,k) == 0){
@@ -197,6 +205,12 @@ int Graph::merge_nodes(int a, int b, vector <edge> &sol, MergeData& mg, const Gr
       
       if(this->Weight(b,k) < 0){
         ans -= this->Weight(b,k);
+        this->weight[this->node_names[a]][this->node_names[k]] -= this->weight[this->node_names[b]][this->node_names[k]];
+        this->weight[this->node_names[k]][this->node_names[a]] = this->weight[this->node_names[a]][this->node_names[k]];
+      }
+      else{
+        this->weight[this->node_names[a]][this->node_names[k]] += this->weight[this->node_names[b]][this->node_names[k]];
+        this->weight[this->node_names[k]][this->node_names[a]] = this->weight[this->node_names[a]][this->node_names[k]];
       }
     }
     else if(this->Flag(b,k) == 1 && this->Flag(a,k) == 0){
@@ -205,6 +219,8 @@ int Graph::merge_nodes(int a, int b, vector <edge> &sol, MergeData& mg, const Gr
         ans -= this->Weight(a,k);
         this->flip_edge(a,k);
       }
+      this->weight[this->node_names[a]][this->node_names[k]] += this->weight[this->node_names[b]][this->node_names[k]];
+      this->weight[this->node_names[k]][this->node_names[a]] = this->weight[this->node_names[a]][this->node_names[k]];
     }
     else if(this->Flag(b,k) * this->Flag(a,k) == 1){
         this->weight[this->node_names[a]][this->node_names[k]] += this->weight[this->node_names[b]][this->node_names[k]];
@@ -348,6 +364,7 @@ void Graph::reset_flag(int a, int b) {
   this->flag[this->node_names[b]][this->node_names[a]] = 0;
 }
 
+/*
 bool Graph::conflict_triple (vector <int>& triple) const {
   FOR(u, 0, this->num_nodes) FOR(v, 0, this->num_nodes-1){
     if (u == v || this->Weight(u,v) <= 0 || this->Flag(u,v) == -1) continue;
@@ -360,6 +377,33 @@ bool Graph::conflict_triple (vector <int>& triple) const {
 	      triple.push_back(u);
 	      triple.push_back(v);
 	      triple.push_back(w);
+	      return true;
+      }
+    }
+  }
+
+  return false;
+}
+*/
+
+bool Graph::conflict_triple (vector <int>& triple) const {
+  for(int u: this->node_names){
+    if(this->neighbors[u].size() < 2) continue;
+    for(int v: this->neighbors[u]) for(int w: this->neighbors[u]){
+      if(v >= w) continue;
+
+      if(this->weight[v][w] <= 0 || this->flag[v][w] == -1){
+        int u_index, v_index, w_index;
+        REP(i, this->num_nodes){
+          if(this->node_names[i] == u) u_index = i;
+          else if(this->node_names[i] == v) v_index = i;
+          else if(this->node_names[i] == w) w_index = i;
+        }
+
+        triple.clear();
+        triple.push_back(u_index);
+	      triple.push_back(v_index);
+	      triple.push_back(w_index);
 	      return true;
       }
     }

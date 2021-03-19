@@ -58,6 +58,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
   vector <edge> best_sol;
   
   // edge branching
+      /*
   FOR(u, 0, G.num_nodes-1) FOR(v, u+1, G.num_nodes){
     if(G.Weight(u,v) <= 0 || G.Flag(u,v) != 0) continue;
     
@@ -70,6 +71,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
     }
 
     if(cnt >= 3){
+
       int u_name = G.node_names[u];
       int v_name = G.node_names[v];
       if(u_name > v_name) SWAP(int, u_name, v_name);
@@ -86,6 +88,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
         if(G.node_names[i] == u_name) u_index = i;
         if(G.node_names[i] == v_name) v_index = i;
       }
+
       G.reset_flag(u_index,v_index);
       G.flip_edge(u_index,v_index);
 
@@ -108,9 +111,8 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
       if(best != -1) sol.insert(sol.end(), best_sol.begin(), best_sol.end());
       return best;
     }
-  }
-  
-  
+  }*/
+
   // merge a, b, & c
   int a, b, c;
   REP(i, G.num_nodes){
@@ -164,7 +166,6 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
     if (a_name_srt > b_name_srt) SWAP(int, a_name_srt, b_name_srt);
     if (b_name_srt > c_name_srt) SWAP(int, b_name_srt, c_name_srt);
     if (a_name_srt > b_name_srt) SWAP(int, a_name_srt, b_name_srt);
-    
     G.expand_nodes(a_name_srt,b_name_srt,mg_ab);
     G.expand_nodes(b_name_srt,c_name_srt,mg_bc);
 
@@ -177,6 +178,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
     if(flag_ab) G.reset_flag(a,b);
     if(flag_bc) G.reset_flag(b,c);
     if(flag_ac) G.reset_flag(a,c);
+    
   }
 
   // merge a & b, and forbid a & c and b & c
@@ -221,6 +223,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
     if(flag_ab) G.reset_flag(a,b);
     if(flag_bc) G.reset_flag(b,c);
     if(flag_ac) G.reset_flag(a,c);
+
   }
 
   // forbid a & b 
