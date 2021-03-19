@@ -58,7 +58,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
   vector <edge> best_sol;
   
   // edge branching
-      /*
+
   FOR(u, 0, G.num_nodes-1) FOR(v, u+1, G.num_nodes){
     if(G.Weight(u,v) <= 0 || G.Flag(u,v) != 0) continue;
     
@@ -111,7 +111,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
       if(best != -1) sol.insert(sol.end(), best_sol.begin(), best_sol.end());
       return best;
     }
-  }*/
+  }
 
   // merge a, b, & c
   int a, b, c;
@@ -137,23 +137,28 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
       G.permanent(b, c, best_sol, G_orig);
       flag_bc = true;
     }
-    G.flip_edge(b,c);
     
+    G.weight[b_name][c_name]--; // for when G.weight[b_name][c_name] == 0
+    G.weight[c_name][b_name]--; // for when G.weight[b_name][c_name] == 0
+    G.flip_edge(b,c);
+
     if (G.node_names[a] > G.node_names[b]) SWAP(int, a, b);
     if (G.node_names[b] > G.node_names[c]) SWAP(int, b, c);
     if (G.node_names[a] > G.node_names[b]) SWAP(int, a, b);
-  
+
     MergeData mg_bc(G_orig.num_nodes);
     int tmp = G.merge_nodes(b, c, best_sol, mg_bc, G_orig);
+    
     if(tmp == -1) cerr << "err" << endl;
     t += tmp;
     if(b > c) b--;
     if(a > c) a--;
+    
     MergeData mg_ab(G_orig.num_nodes);
     tmp = G.merge_nodes(a, b, best_sol, mg_ab, G_orig);
     if(tmp == -1) cerr << "err" << endl;
     t += tmp;
-
+  
     int tt = naive_branching(G, G_orig, max_obj+w, best_sol);
     if (tt != -1){
       best = tt + t - w;
@@ -169,12 +174,16 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
     G.expand_nodes(a_name_srt,b_name_srt,mg_ab);
     G.expand_nodes(b_name_srt,c_name_srt,mg_bc);
 
+    
     REP(i, G.num_nodes){
       if(G.node_names[i] == a_name) a = i;
       else if(G.node_names[i] == b_name) b = i;
       else if(G.node_names[i] == c_name) c = i;
     }
     G.flip_edge(b,c);
+    G.weight[b_name][c_name]++;
+    G.weight[c_name][b_name]++;
+
     if(flag_ab) G.reset_flag(a,b);
     if(flag_bc) G.reset_flag(b,c);
     if(flag_ac) G.reset_flag(a,c);
@@ -229,6 +238,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
   // forbid a & b 
   if(G.Flag(a,b) != 1){
     vector <edge> tmp_sol;
+
     G.forbid(a,b, tmp_sol, G_orig);
     int w = G.Weight(a,b);
     G.flip_edge(a,b);

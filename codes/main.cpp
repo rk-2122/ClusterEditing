@@ -58,7 +58,7 @@ int main(int argc, char *argv[]){
     return 0;
   }
  
-   int obj2 = naive_branching(G, Gin, obj1-red_cost, sol2);
+  int obj2 = naive_branching(G, Gin, obj1-red_cost, sol2);
   
   if (obj1 > obj2 + red_cost && obj2 != -1){
     obj1 = obj2 + red_cost;
