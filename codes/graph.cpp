@@ -22,10 +22,12 @@ Graph::Graph(int n){
   this->node_names = vector <int>(n);
   this->node_pointers = vector <int>(n);
   this->neighbors = vector <list <int>>(n);
+  this->name_to_ind = vector <int>(n);
 
   REP(i, n){
     this->node_names[i] = i;
     this->node_pointers[i] = i;
+    this->name_to_ind[i] = i;
   }
 }
 
@@ -57,10 +59,12 @@ Graph::Graph(const char *filename){
           this->node_names = vector <int>(N);
           this->node_pointers = vector <int>(N);
           this->neighbors = vector <list <int>>(N);
+          this->name_to_ind = vector <int> (N);
 
           REP(i, N){
             this->node_names[i] = i;
             this->node_pointers[i] = i;
+            this->name_to_ind[i] = i;
           }
 	      }
 	      cnt++;
@@ -93,8 +97,10 @@ void Graph::delete_node(int i, vector <edge>& sol, const Graph &G_orig){
   }
   //this->weight.erase(this->weight.begin()+i);
   //this->flag.erase(this->flag.begin()+i);
+  this->name_to_ind[this->node_names[i]] = -1;
   this->num_nodes--;
   this->node_names.erase(this->node_names.begin()+i);
+  FOR(j, i, this->num_nodes) this->name_to_ind[this->node_names[j]]--;
 
   /*
   REP(j, this->num_nodes){
@@ -130,9 +136,10 @@ void Graph::delete_nodes(vector <int> U, vector <edge>& sol, const Graph &G_orig
     //this->weight.erase(this->weight.begin()+U[i]);
     //this->flag.erase(this->flag.begin()+U[i]);
     for(int a : this->neighbors[this->node_names[U[i]]]) this->neighbors[a].remove(this->node_names[U[i]]);
+    this->name_to_ind[this->node_names[U[i]]] = -1;
     this->num_nodes--;
     this->node_names.erase(this->node_names.begin()+U[i]);
-
+    FOR(j, U[i], this->num_nodes) this->name_to_ind[this->node_names[j]]--;
     /*
     REP(j, this->num_nodes){
       this->weight[j].erase(this->weight[j].begin()+U[i]);
@@ -236,9 +243,10 @@ int Graph::merge_nodes(int a, int b, vector <edge> &sol, MergeData& mg, const Gr
   this->weight.erase(this->weight.begin()+b);
   this->flag.erase(this->flag.begin()+b);
   */
+  this->name_to_ind[this->node_names[b]] = -1;
   this->num_nodes--;
   this->node_names.erase(this->node_names.begin()+b);
-
+  FOR(j, b, this->num_nodes) this->name_to_ind[this->node_names[j]]--;
   /*
   REP(j, this->num_nodes){
     this->weight[j].erase(this->weight[j].begin()+b);
@@ -270,7 +278,8 @@ void Graph::expand_nodes(int a, int b, const MergeData& mg){
     this->weight[a][this->node_names[k]] = mg.weight[this->node_names[k]];
     this->weight[this->node_names[k]][a] = mg.weight[this->node_names[k]];
   }
-    
+
+  this->name_to_ind[b] = num_nodes;
   this->num_nodes++;
   this->node_names.push_back(b);
 

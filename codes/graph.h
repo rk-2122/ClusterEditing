@@ -15,6 +15,7 @@ class Graph{
     std::vector <int> node_names;
     std::vector <int> node_pointers;
     std::vector <std::list <int>> neighbors;
+    std::vector <int> name_to_ind;
 
     Graph();  // constructor
     Graph(int n);  // constructor with n nodes
