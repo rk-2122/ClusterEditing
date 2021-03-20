@@ -398,22 +398,15 @@ bool Graph::conflict_triple (vector <int>& triple) const {
 bool Graph::conflict_triple (vector <int>& triple) const {
   for(int u: this->node_names){
     if(this->neighbors[u].size() < 2) continue;
-    for(int v: this->neighbors[u]) for(int w: this->neighbors[u]){
-      if(v >= w) continue;
-
-      if(this->weight[v][w] <= 0 || this->flag[v][w] == -1){
-        int u_index, v_index, w_index;
-        REP(i, this->num_nodes){
-          if(this->node_names[i] == u) u_index = i;
-          else if(this->node_names[i] == v) v_index = i;
-          else if(this->node_names[i] == w) w_index = i;
+    for(auto v = this->neighbors[u].begin(); next(v) != this->neighbors[u].end(); v++) {
+      for(auto w=next(v); w != this->neighbors[u].end(); w++){
+        if(this->weight[(*v)][(*w)] <= 0 || this->flag[(*v)][(*w)] == -1){
+          triple.clear();
+          triple.push_back(this->name_to_ind[u]);
+	        triple.push_back(this->name_to_ind[*v]);
+	        triple.push_back(this->name_to_ind[*w]);
+  	      return true;
         }
-
-        triple.clear();
-        triple.push_back(u_index);
-	      triple.push_back(v_index);
-	      triple.push_back(w_index);
-	      return true;
       }
     }
   }
