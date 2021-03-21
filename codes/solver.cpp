@@ -251,40 +251,50 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
 }
 
 int random_pivot(const Graph& G, const Graph& G_orig, std::vector <edge>& sol){
-  Graph Gcopy = G;
+  Graph Gnew = G;
   rnd.seed(RANDOM_SEED);
+  int n = Gnew.num_nodes;
+  vector <int> nodes;
+  REP(i, n) nodes.push_back(i);
 
   int cost = 0;
 
-  while(Gcopy.num_nodes > 1){
-    int k = rnd(0, Gcopy.num_nodes-1);
-    int pivot = Gcopy.node_names[k];
-    vector <int> N;
-    N.push_back(k);
-    
-    for(int i: Gcopy.neighbors[pivot]) N.push_back(Gcopy.name_to_ind[i]);
+  while(n > 1){
+    int k = rnd(0, n-1);
+    int pivot = nodes[k];
+    vector <int> neighbor;
+    nodes.erase(nodes.begin()+k);
+    n--;
 
-    if(Gcopy.neighbors[pivot].size() > 1){
-      for(auto u = Gcopy.neighbors[pivot].begin(); next(u) != Gcopy.neighbors[pivot].end(); u++){ 
-        for(auto v = next(u); v != Gcopy.neighbors[pivot].end(); v++){
-          if(Gcopy.weight[*u][*v] < 0){
-            cost-= Gcopy.weight[*u][*v];
-            Gcopy.add_edge(Gcopy.name_to_ind[*u], Gcopy.name_to_ind[*v]);
-          }
+    for(int i=n-1; i >= 0; i--){
+      if(Gnew.Weight(nodes[i],pivot) > 0) {
+        neighbor.push_back(nodes[i]);
+        if(Gnew.Flag(nodes[i],pivot) == 0) Gnew.permanent(nodes[i],pivot,sol,G_orig);
+        nodes.erase(nodes.begin()+i);
+      }
+    }
+    n -= neighbor.size();
+
+    if(neighbor.size() > 1){
+      FOR(i,0, (int) neighbor.size()-1) FOR(j, i+1, (int) neighbor.size()){
+        if(Gnew.Flag(neighbor[i],neighbor[j]) == 0) Gnew.permanent(neighbor[i],neighbor[j],sol,G_orig);
+
+        if(Gnew.Weight(neighbor[i],neighbor[j]) < 0){
+          cost-= Gnew.Weight(neighbor[i],neighbor[j]);
+          Gnew.add_edge(neighbor[i], neighbor[j]);
         }
       }
     }
-    if(Gcopy.neighbors[pivot].size() > 0 && Gcopy.num_nodes - Gcopy.neighbors[pivot].size() > 1){
-      for(int i : Gcopy.neighbors[pivot]){
-        REP(j, Gcopy.num_nodes){
-          if(j != k && Gcopy.Weight(j,k) <= 0 && Gcopy.Weight(Gcopy.name_to_ind[i],j) > 0){
-            cost += Gcopy.Weight(Gcopy.name_to_ind[i],j);
-            Gcopy.delete_edge(Gcopy.name_to_ind[i],j);
-          }
+    if(neighbor.size() > 0 && n > 0){
+      REP(i, (int) neighbor.size()) REP(j, n){
+        if(Gnew.Flag(neighbor[i],nodes[j]) == 0) Gnew.forbid(neighbor[i],nodes[j],sol,G_orig);
+        
+        if(Gnew.Weight(neighbor[i],nodes[j]) > 0){
+          cost += Gnew.Weight(neighbor[i],nodes[j]);
+          Gnew.delete_edge(neighbor[i],nodes[j]);
         }
       }
     }
-    Gcopy.delete_nodes(N, sol, G_orig);
   }
   
   return cost;
