@@ -250,52 +250,68 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
   return best;
 }
 
-int random_pivot(const Graph& G, const Graph& G_orig, std::vector <edge>& sol){
-  Graph Gnew = G;
+int random_pivot(Graph& G, const Graph& G_orig, std::vector <edge>& sol){
   rnd.seed(RANDOM_SEED);
-  int n = Gnew.num_nodes;
-  vector <int> nodes;
-  REP(i, n) nodes.push_back(i);
+  int best_cost = -1;
+  vector <edge> best_sol;
 
-  int cost = 0;
+  REP(t, NUM_RPIVOT){
+    int n = G.num_nodes;
+    vector <int> nodes;
+    REP(i, n) nodes.push_back(i);
+    vector <edge> tmpsol;
+    int cost = 0;
 
-  while(n > 1){
-    int k = rnd(0, n-1);
-    int pivot = nodes[k];
-    vector <int> neighbor;
-    nodes.erase(nodes.begin()+k);
-    n--;
+    while(n > 1){
+      int k = rnd(0, n-1);
+      int pivot = nodes[k];
+      vector <int> neighbor;
+      nodes.erase(nodes.begin()+k);
+      n--;
 
-    for(int i=n-1; i >= 0; i--){
-      if(Gnew.Weight(nodes[i],pivot) > 0) {
-        neighbor.push_back(nodes[i]);
-        if(Gnew.Flag(nodes[i],pivot) == 0) Gnew.permanent(nodes[i],pivot,sol,G_orig);
-        nodes.erase(nodes.begin()+i);
-      }
-    }
-    n -= neighbor.size();
-
-    if(neighbor.size() > 1){
-      FOR(i,0, (int) neighbor.size()-1) FOR(j, i+1, (int) neighbor.size()){
-        if(Gnew.Flag(neighbor[i],neighbor[j]) == 0) Gnew.permanent(neighbor[i],neighbor[j],sol,G_orig);
-
-        if(Gnew.Weight(neighbor[i],neighbor[j]) < 0){
-          cost-= Gnew.Weight(neighbor[i],neighbor[j]);
-          Gnew.add_edge(neighbor[i], neighbor[j]);
+      for(int i=n-1; i >= 0; i--){
+        if(G.Weight(nodes[i],pivot) > 0) {
+          neighbor.push_back(nodes[i]);
+          if(G.Flag(nodes[i],pivot) == 0){
+            G.permanent(nodes[i],pivot,sol,G_orig);
+            G.reset_flag(nodes[i], pivot);
+          }
+          nodes.erase(nodes.begin()+i);
         }
       }
-    }
-    if(neighbor.size() > 0 && n > 0){
-      REP(i, (int) neighbor.size()) REP(j, n){
-        if(Gnew.Flag(neighbor[i],nodes[j]) == 0) Gnew.forbid(neighbor[i],nodes[j],sol,G_orig);
+      n -= neighbor.size();
+
+      if(neighbor.size() > 1){
+        FOR(i,0, (int) neighbor.size()-1) FOR(j, i+1, (int) neighbor.size()){
+          if(G.Flag(neighbor[i],neighbor[j]) == 0){
+            G.permanent(neighbor[i],neighbor[j],sol,G_orig);
+            G.reset_flag(neighbor[i], neighbor[j]);
+          }
+
+          if(G.Weight(neighbor[i],neighbor[j]) < 0){
+            cost-= G.Weight(neighbor[i],neighbor[j]);
+          }
+        }
+      }
+      if(neighbor.size() > 0 && n > 0){
+        REP(i, (int) neighbor.size()) REP(j, n){
+          if(G.Flag(neighbor[i],nodes[j]) == 0){
+            G.forbid(neighbor[i],nodes[j],sol,G_orig);
+            G.reset_flag(neighbor[i],nodes[j]);
+          }
         
-        if(Gnew.Weight(neighbor[i],nodes[j]) > 0){
-          cost += Gnew.Weight(neighbor[i],nodes[j]);
-          Gnew.delete_edge(neighbor[i],nodes[j]);
+          if(G.Weight(neighbor[i],nodes[j]) > 0){
+            cost += G.Weight(neighbor[i],nodes[j]);
+          }
         }
       }
+    }
+    if(best_cost == -1 || cost < best_cost){
+      best_cost = cost;
+      best_sol = tmpsol;
     }
   }
-  
-  return cost;
+
+  if(best_cost != -1) sol.insert(sol.end(), best_sol.begin(), best_sol.end());
+  return best_cost;
 }

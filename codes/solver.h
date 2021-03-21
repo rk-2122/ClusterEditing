@@ -5,4 +5,4 @@
 // assumption: max_obj >= 0
 int naive_branching(Graph& G, const Graph& G_orig, int max_obj, std::vector <edge>& sol);
 
-int random_pivot(const Graph& G, const Graph& G_orig, std::vector <edge>& sol);
+int random_pivot(Graph& G, const Graph& G_orig, std::vector <edge>& sol);
