@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <list>
 #include <string>
 #include <time.h>
 
@@ -37,6 +38,8 @@ int main(int argc, char *argv[]){
   }
   else Gin = Graph("../instances/exact/exact003.gr");
 
+  vector <edge> sol;
+  
   //////////////////// begin
 
 
@@ -47,23 +50,20 @@ int main(int argc, char *argv[]){
   vector <edge> sol1;
   int obj1 = random_pivot(G, Gin, sol1);
 
-/*
   vector <edge> sol2;
-  int obj2 = cal_reduction(G, Gin, obj1, sol2);
-*/
-
-  vector <edge> sol2;
-  int obj2 = cal_ker(G, Gin, sol2);
+  int red_cost = cal_reduction(G, Gin, obj1, sol2);
+  red_cost += cal_ker(G, Gin, sol2);
 
   if(op.exist("reduction")){
     clock_t c_end = clock();
-    cout << op.get<string>("input") << " " << obj1 << " " << obj2 << " " << Gin.num_nodes << " " << G.num_nodes << " " << (double) (c_end - c_start)/ CLOCKS_PER_SEC << endl;
+    cout << op.get<string>("input") << " " << obj1 << " " << red_cost << " " << Gin.num_nodes << " " << G.num_nodes << " " << (double) (c_end - c_start)/ CLOCKS_PER_SEC << endl;
     return 0;
   }
-  obj2 += naive_branching(G, Gin, obj1-obj2, sol2);
-
-  if (obj1 > obj2 && obj2 != -1){
-    obj1 = obj2;
+ 
+  int obj2 = naive_branching(G, Gin, obj1-red_cost, sol2);
+  
+  if (obj1 > obj2 + red_cost && obj2 != -1){
+    obj1 = obj2 + red_cost;
     sol1 = sol2;
   }
   clock_t c_end = clock();
