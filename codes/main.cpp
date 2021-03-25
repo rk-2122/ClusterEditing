@@ -49,7 +49,6 @@ int main(int argc, char *argv[]){
   int obj1 = random_pivot(G, Gin, sol1);
 
   vector <edge> sol2;
- 
   int red_cost = cal_reduction(G, Gin, obj1, sol2);
   
   if(op.exist("reduction")){
