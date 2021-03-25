@@ -156,16 +156,22 @@ int kernelization_EdgeCuts(Graph& G, const Graph& G_orig, vector <edge>& sol) {
                 }
             }
         }
+        bool flag_neighbor = false;
         if(G.neighbors[v].size() >= 2){
             for(auto i = G.neighbors[v].begin(); next(i) != G.neighbors[v].end(); i++) {
                 for(auto j = next(i); j != G.neighbors[v].end(); j++) {
                     if(G.weight[*i][*j] <= 0){
-                        if (G.flag[*i][*j] == -1) cerr << "error in kernelization_EdgeCuts" << endl;
+                        if (G.flag[*i][*j] == -1){
+                            flag_neighbor = true;
+                            break;
+                        }
                         delta -= G.weight[*i][*j];
                     }
                 }   
+                if(flag_neighbor) break;
             }
         }
+        if(flag_neighbor) continue;
 
         if(2*delta + gamma < G.neighbors[v].size()+1) {
             //Step 1
@@ -193,17 +199,19 @@ int kernelization_EdgeCuts(Graph& G, const Graph& G_orig, vector <edge>& sol) {
             //Step 3
             if(x_remain != -1) {
                 // merge N[v] into a single vertex v'
-                if(G.neighbors[v].size() > 1){
-                    G.neighbors[v].sort(greater<int>());
-                    for(auto i = G.neighbors[v].begin(); next(i) != G.neighbors[v].end(); i++) {
-                        if(G.flag[*i][*next(i)] == 0) G.permanent(G.name_to_ind[*i], G.name_to_ind[*next(i)], sol, G_orig);
-                        MergeData mg(G.num_nodes);
-                        cost += G.merge_nodes(G.name_to_ind[*i], G.name_to_ind[*next(i)], sol, mg, G_orig);
+                if(G.neighbors[v].size() > 0){
+                    vector <int> neighb;
+                    for(auto i : G.neighbors[v]) neighb.push_back(i);
+                    sort(neighb.begin(), neighb.end(), greater<int>());
+                    REP(i, neighb.size()-1) {
+                        if(G.flag[neighb[i]][neighb[i+1]] == 0) G.permanent(G.name_to_ind[neighb[i]], G.name_to_ind[neighb[i+1]], sol, G_orig);
+                        MergeData mg(G_orig.num_nodes);
+                        cost += G.merge_nodes(G.name_to_ind[neighb[i]], G.name_to_ind[neighb[i+1]], sol, mg, G_orig);
                     }
                 }
                 
                 if(G.flag[v][*G.neighbors[v].begin()] == 0) G.permanent(G.name_to_ind[v], G.name_to_ind[*G.neighbors[v].begin()], sol, G_orig);
-                MergeData mg(G.num_nodes);
+                MergeData mg(G_orig.num_nodes);
                 cost += G.merge_nodes(G.name_to_ind[v], G.name_to_ind[*G.neighbors[v].begin()], sol, mg, G_orig);
 
                 return cost;
