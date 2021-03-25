@@ -132,147 +132,90 @@ int cal_reduction(Graph& G, const Graph& G_orig, const int obj, vector <edge>& s
 
 
 //kernelization based on edge cuts
-
-//output N(v)
-vector<int> open_adjacency_set(Graph& G, int v) {
-    vector<int> N_v;
-
-    for(auto w: G.node_names) {
-        if(G.weight[v][w] > 0) N_v.push_back(w);
-    }
-    return N_v;
-}
-
-//delta(v) = \Pi({{x,y} | x,y \in N(v), [x,y] \notin E}). delta is positive.
-int delta_v(Graph& G, vector<int> adj_v) {
-    int delta_cost = 0;
-
-    for(auto& s: adj_v) {
-        for(auto& t: adj_v) {
-            //cout << "(s,t) = " << "(" << s << "," << t << ")" << endl;
-            if(s != t && s < t) {
-                if(G.weight[s][t] <= 0) delta_cost -= G.weight[s][t];
-            }
-        }
-    }
-    return delta_cost;
-}
-
-//gamma(v) is total weight of edges to make N[v] disjoint.
-int gamma_v(Graph& G, vector<int> closed_adj_set) {
-    int gamma_cost = 0;
-    vector<int> diff;
-    set_difference(G.node_names.begin(), G.node_names.end(), closed_adj_set.begin(), closed_adj_set.end(), inserter(diff, diff.end()));
-
-    for(auto& s: diff) {
-        for(auto& t: closed_adj_set) {
-            if(G.weight[s][t] > 0) gamma_cost += G.weight[s][t];
-        }
-    }
-    return gamma_cost;
-}
-
-//output E(x, N[v]). E(x,N[v]) is the set of edges that has one end in v and the other in N[v].
-vector<int> edge_from_x_to_openNv(Graph& G, int x, int v) {
-    vector<int> N_v;
-    vector<int> end_points;
-    N_v = open_adjacency_set(G, v);
-
-    for(auto& y: N_v) {
-        if(G.weight[x][y] > 0)  end_points.push_back(y);
-    }
-    return end_points;
-}
-
-//add edges to make G[N[v]] a clique
-int make_clique(Graph& G, const Graph& G_orig, vector<int> closed_N_v, vector <edge>& sol) {
-    int clique_cost = 0;
-
-    for(auto& s: closed_N_v) {
-        for(auto& t: closed_N_v) {
-            if(s != t && s < t) {
-                if(G.weight[s][t] < 0) {
-                    if(G.flag[s][t] == 0) G.permanent(s, t, sol, G_orig);
-                    G.weight[s][t] *= -1;
-                    clique_cost += G.weight[s][t];
-                }
-            }
-        }
-    }
-    return clique_cost;
-}
-
-//output N(N[v])
-vector<int> adj_adj_set(Graph& G, vector<int> closed_adj_set) {
-    vector<int> adj_Nv;
-    vector<int> diff;
-    set_difference(G.node_names.begin(), G.node_names.end(), closed_adj_set.begin(), closed_adj_set.end(), inserter(diff, diff.end()));
-    for(auto& s: diff) {
-        for(auto& t: closed_adj_set) {
-            if(G.weight[s][t] > 0) adj_Nv.push_back(s);
-        }
-    }
-    return adj_Nv;
-}
-
-
 int kernelization_EdgeCuts(Graph& G, const Graph& G_orig, vector <edge>& sol) {
     vector<int> adj_set;
     int cost = 0;
     int delta;
     int gamma;
 
-    for(auto& v: G.node_names) {
-        adj_set = open_adjacency_set(G, v); //open adjacency set
-        delta = delta_v(G, adj_set);
-        adj_set.push_back(v); //closed adjacency set
-        sort(adj_set.begin(), adj_set.end());
-        gamma = gamma_v(G, adj_set);
+    for(auto v: G.node_names) {
+        delta = 0;
+        gamma = 0;
         vector<int> adj_Nv;
+        vector<int> gamma_nn(G.num_nodes,0);
+        vector <vector <int>> nn(G.num_nodes);
 
-
-        //Step 1
-        if(2*delta + gamma < adj_set.size()) {
-            cost += make_clique(G, G_orig, adj_set, sol);
-
-
-        //Step 2
-            adj_Nv = adj_adj_set(G, adj_set);
-            for(auto& x: adj_Nv) {
-                vector<int> edge;
-                edge = edge_from_x_to_openNv(G,x,v);
-                int edge_cost = 0;
-                for(auto& e: edge) {
-                    edge_cost += G.weight[x][e];
-                }
-                if(edge_cost <= adj_set.size() / 2) {
-                    for(auto& e: edge) {
-                        G.forbid(x, e, sol, G_orig);
-                        G.delete_edge(x, e);
-                    }
-                    cost += edge_cost;
+        for(auto i : G.node_names){
+            if(i == v || G.weight[i][v] > 0) continue;
+            for(auto j: G.neighbors[i]){
+                if(G.weight[v][j] > 0){
+                    gamma += G.weight[i][j];
+                    gamma_nn[i] +=G.weight[i][j];
+                    if(nn[i].size() == 0) adj_Nv.push_back(i);
+                    nn[i].push_back(j);
                 }
             }
+        }
 
-
-        //Step 3
-            adj_Nv = adj_adj_set(G, adj_set);
-            if(adj_Nv.size() > 0) {
-                // merge N[v] into a single vertex v'
-                sort(adj_set.begin(), adj_set.end(), greater<int>());
-                for(int i=0; i < adj_set.size()-1; i++) {
-                    if(G.flag[adj_set[i]][adj_set[i+1]] == 0) G.permanent(adj_set[i], adj_set[i+1], sol, G_orig);
-                    G.merge_nodes(adj_set[i], adj_set[i+1], sol, G_orig);
+        for(auto i = G.neighbors[v].begin(); next(i) != G.neighbors[v].end(); i++) {
+            for(auto j = next(i); j != G.neighbors[v].end(); j++) {
+                if(G.weight[*i][*j] <= 0){
+                    if (G.flag[*i][*j] == -1) cerr << "error in kernelization_EdgeCuts" << endl;
+                    delta -= G.weight[*i][*j];
                 }
+            }
+        }
+
+        if(2*delta + gamma < G.neighbors[v].size()+1) {
+            //Step 1
+            for(auto i = G.neighbors[v].begin(); next(i) != G.neighbors[v].end(); i++) {
+                for(auto j = next(i); j != G.neighbors[v].end(); j++) {
+                    if(G.flag[*i][*j] == 0) G.permanent(G.name_to_ind[*i], G.name_to_ind[*j], sol, G_orig);
+                    if(G.weight[*i][*j] <= 0)G.flip_edge(G.name_to_ind[*i], G.name_to_ind[*j]);
+                }
+            }
+            cost += delta;
+
+            //Step 2
+            int x_remain = -1;
+            for(auto& x: adj_Nv) {
+                if(gamma_nn[x] <= (G.neighbors[v].size()+1) / 2) {
+                    for(auto j: nn[x]) {
+                        G.forbid(G.name_to_ind[x], G.name_to_ind[j], sol, G_orig);
+                        G.flip_edge(G.name_to_ind[x], G.name_to_ind[j]);
+                    }
+                    cost += gamma_nn[x];
+                }
+                else x_remain = x;
+            }
+
+            //Step 3
+            if(x_remain != -1) {
+                // merge N[v] into a single vertex v'
+                if(G.neighbors[v].size() > 1){
+                    G.neighbors[v].sort(greater<int>());
+                    for(auto i = G.neighbors[v].begin(); next(i) != G.neighbors[v].end(); i++) {
+                        if(G.flag[*i][*next(i)] == 0) G.permanent(G.name_to_ind[*i], G.name_to_ind[*next(i)], sol, G_orig);
+                        MergeData mg(G.num_nodes);
+                        cost += G.merge_nodes(G.name_to_ind[*i], G.name_to_ind[*next(i)], sol, mg, G_orig);
+                    }
+                }
+                
+                if(G.flag[v][*G.neighbors[v].begin()] == 0) G.permanent(G.name_to_ind[v], G.name_to_ind[*G.neighbors[v].begin()], sol, G_orig);
+                MergeData mg(G.num_nodes);
+                cost += G.merge_nodes(G.name_to_ind[v], G.name_to_ind[*G.neighbors[v].begin()], sol, mg, G_orig);
+
                 return cost;
 
             }else {
-                if(adj_set.size() > 1)  {
+                if(G.neighbors[v].size() > 0)  {
+                    vector <int> adj_set;
+                    adj_set.push_back(G.name_to_ind[v]);
+                    for(int i : G.neighbors[v]) adj_set.push_back(G.name_to_ind[i]);
                     G.delete_nodes(adj_set, sol, G_orig);
                     return cost;
-
-                }else if (adj_set.size() == 1) {
-                    G.delete_node(v, sol, G_orig);
+                }else{
+                    G.delete_node(G.name_to_ind[v], sol, G_orig);
                     return cost;
                 }
             }
