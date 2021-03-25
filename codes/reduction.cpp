@@ -142,8 +142,8 @@ int kernelization_EdgeCuts(Graph& G, const Graph& G_orig, vector <edge>& sol) {
         delta = 0;
         gamma = 0;
         vector<int> adj_Nv;
-        vector<int> gamma_nn(G.num_nodes,0);
-        vector <vector <int>> nn(G.num_nodes);
+        vector<int> gamma_nn(G_orig.num_nodes,0);
+        vector <vector <int>> nn(G_orig.num_nodes);
 
         for(auto i : G.node_names){
             if(i == v || G.weight[i][v] > 0) continue;
@@ -156,13 +156,14 @@ int kernelization_EdgeCuts(Graph& G, const Graph& G_orig, vector <edge>& sol) {
                 }
             }
         }
-
-        for(auto i = G.neighbors[v].begin(); next(i) != G.neighbors[v].end(); i++) {
-            for(auto j = next(i); j != G.neighbors[v].end(); j++) {
-                if(G.weight[*i][*j] <= 0){
-                    if (G.flag[*i][*j] == -1) cerr << "error in kernelization_EdgeCuts" << endl;
-                    delta -= G.weight[*i][*j];
-                }
+        if(G.neighbors[v].size() >= 2){
+            for(auto i = G.neighbors[v].begin(); next(i) != G.neighbors[v].end(); i++) {
+                for(auto j = next(i); j != G.neighbors[v].end(); j++) {
+                    if(G.weight[*i][*j] <= 0){
+                        if (G.flag[*i][*j] == -1) cerr << "error in kernelization_EdgeCuts" << endl;
+                        delta -= G.weight[*i][*j];
+                    }
+                }   
             }
         }
 
