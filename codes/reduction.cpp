@@ -105,14 +105,14 @@ int reduction(Graph& G, const Graph& G_orig, const int obj, vector <edge>& sol) 
     }
 
     for(int u=0; u < N-1; u++) {
-      for(int v=u+1; v < N; v++) {
-          int cost = check_unaffordable(G, u, v, obj);
-          if(cost > 0) {
-              if (G.flag[u][v] == 0) G.permanent(u, v, sol, G_orig);
-              G.merge_nodes(u, v, sol, G_orig);
-              return cost;
-          }
-      }
+        for(int v=u+1; v < N; v++) {
+            int cost = check_unaffordable(G, u, v, obj);
+            if(cost > 0) {
+                if (G.flag[u][v] == 0) G.permanent(u, v, sol, G_orig);
+                G.merge_nodes(u, v, sol, G_orig);
+                return cost;
+            }
+        }
     }
 
     return -1;
@@ -229,16 +229,11 @@ int kernelization_EdgeCuts(Graph& G, const Graph& G_orig, vector <edge>& sol) {
         gamma = gamma_v(G, adj_set);
         vector<int> adj_Nv;
 
-        //show_vec(adj_set);
-        //cout << "|N[v]| = "<<  adj_set.size() << endl;
-        //cout << "delta(v) = " << delta << endl;
-        //cout << "gamma = " << gamma << endl;
-        //int round = 2 * delta + gamma;
-        //cout << "round = " << round << ", " << "|N[v]| = " << adj_set.size() << endl;
 
         //Step 1
         if(2*delta + gamma < adj_set.size()) {
             cost += make_clique(G, G_orig, adj_set, sol);
+
 
         //Step 2
             adj_Nv = adj_adj_set(G, adj_set);
@@ -262,35 +257,19 @@ int kernelization_EdgeCuts(Graph& G, const Graph& G_orig, vector <edge>& sol) {
         //Step 3
             adj_Nv = adj_adj_set(G, adj_set);
             if(adj_Nv.size() > 0) {
-                //show_vec(adj_Nv);
-                //show_vec(adj_set);
-                // make a clique
-                for(auto& s: adj_Nv) {
-                    adj_set.push_back(s);
-                }
-                //show_vec(adj_set);
-                cost += make_clique(G, G_orig, adj_set, sol);
-                G.delete_nodes(adj_set, sol, G_orig);
-                return cost;
-
-                /*
                 // merge N[v] into a single vertex v'
                 sort(adj_set.begin(), adj_set.end(), greater<int>());
                 for(int i=0; i < adj_set.size()-1; i++) {
-                    cout << 'c' << endl;
                     if(G.flag[adj_set[i]][adj_set[i+1]] == 0) G.permanent(adj_set[i], adj_set[i+1], sol, G_orig);
-                    cout << 'd' << endl;
-                    cost += G.merge_nodes(adj_set[i], adj_set[i+1], sol, G_orig);
-                    cout << 'e' << endl;
-                    show_vec(adj_set);
+                    G.merge_nodes(adj_set[i], adj_set[i+1], sol, G_orig);
                 }
                 return cost;
-                */
 
             }else {
                 if(adj_set.size() > 1)  {
                     G.delete_nodes(adj_set, sol, G_orig);
                     return cost;
+
                 }else if (adj_set.size() == 1) {
                     G.delete_node(v, sol, G_orig);
                     return cost;
@@ -301,89 +280,6 @@ int kernelization_EdgeCuts(Graph& G, const Graph& G_orig, vector <edge>& sol) {
     return cost;
 }
 
-
-/*
-int kernelization_EdgeCuts(Graph& G, const Graph& G_orig, vector <edge>& sol) {
-    vector<int> adj_set;
-    int cost = 0;
-    int delta;
-    int gamma;
-    int flag = 0;
-
-    for(auto& v: G.node_names) {
-        adj_set = open_adjacency_set(G, v); //open adjacency set
-        delta = delta_v(G, adj_set);
-        adj_set.push_back(v); //closed adjacency set
-        gamma = gamma_v(G, adj_set);
-
-        //Step 1
-        if(2*delta + gamma < adj_set.size()) {
-            cost += make_clique(G, G_orig, adj_set, sol);
-            flag = 1;
-
-            //Step 2
-            adj_set = open_adjacency_set(G, v);
-            delta = delta_v(G, adj_set);
-            adj_set.push_back(v);
-            gamma = gamma_v(G, adj_set);
-
-            if(flag == 1) {
-                vector<int> adj_Nv;
-                adj_Nv = adj_adj_set(G, adj_set);
-                for(auto& x: adj_Nv) {
-                    vector<int> edge;
-                    edge = edge_from_x_to_openNv(G,x,v);
-                    int edge_cost = 0;
-                    for(auto& e: edge) {
-                        edge_cost += G.weight[x][e];
-                    }
-                    if(edge_cost <= adj_set.size() / 2) {
-                        for(auto& e: edge) {
-                            G.forbid(x, e, sol, G_orig);
-                            G.delete_edge(x, e);
-                        }
-                    }
-                }
-
-                //Step 3
-                adj_set = open_adjacency_set(G, v);
-                delta = delta_v(G, adj_set);
-                adj_set.push_back(v);
-                gamma = gamma_v(G, adj_set);
-
-                if(2*delta + gamma < adj_set.size()) {
-                    adj_Nv = adj_adj_set(G, adj_set);
-                    if(adj_Nv.size() > 0) {
-                        // merge N[v] into a single vertex v'
-                        sort(adj_set.begin(), adj_set.end(), greater<int>());
-                        cout << 'a' << endl;
-                        for(int i=0; i < adj_set.size()-1; i++) {
-                            G.permanent(adj_set[i], adj_set[i+1], sol, G_orig);
-                            cost += G.merge_nodes(adj_set[i], adj_set[i+1], sol, G_orig);
-                            cout << adj_set.size() << endl;
-                            for(auto& x: adj_set) {
-                                cout << x << ' ';
-                            }
-                            cout << endl;
-                            //return cost;
-                        }
-                        //return cost;
-                    }else {
-                        if(adj_set.size() > 1)  {
-                        //G.delete_nodes(adj_set, sol, G_orig);
-                        return cost;
-                        }else if (adj_set.size() == 1) {
-                        //G.delete_node(v, sol, G_orig);
-                        return cost;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return cost;
-}
-*/
 
 int cal_ker(Graph& G, const Graph& G_orig, vector <edge>& sol) {
     int cost = 0;

@@ -35,18 +35,25 @@ int main(int argc, char *argv[]){
     const char *fn = op.get<string>("input").c_str();
     Gin = Graph(fn);
   }
-  else Gin = Graph("../instances/exact/exact001.gr");
+  else Gin = Graph("../instances/exact/exact003.gr");
 
   //////////////////// begin
+
+
   clock_t c_start = clock();
-  
+
   Graph G = Gin;
 
   vector <edge> sol1;
   int obj1 = random_pivot(G, Gin, sol1);
 
+/*
   vector <edge> sol2;
   int obj2 = cal_reduction(G, Gin, obj1, sol2);
+*/
+
+  vector <edge> sol2;
+  int obj2 = cal_ker(G, Gin, sol2);
 
   if(op.exist("reduction")){
     clock_t c_end = clock();
@@ -70,7 +77,19 @@ int main(int argc, char *argv[]){
     write_sol(sol1,fo);
   }
 
+
+
+  //test
+/*
+  Graph G = Gin;
+  int cost;
+  vector <edge> sol;
+  cost = cal_ker(G, Gin, sol);
+  show_sol(sol);
+  cout << cost << endl;
+  cout << "sol_num = " << sol.size() << endl;
   return 0;
+  */
 }
 
 
