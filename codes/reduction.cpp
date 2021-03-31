@@ -139,6 +139,11 @@ int kernelization_EdgeCuts(Graph& G, const Graph& G_orig, vector <edge>& sol) {
     int gamma;
 
     for(auto v: G.node_names) {
+        if(G.neighbors[v].size() == 0){
+            G.delete_node(G.name_to_ind[v], sol, G_orig);
+            return 0;
+        }
+
         delta = 0;
         gamma = 0;
         vector<int> adj_Nv;
@@ -175,10 +180,12 @@ int kernelization_EdgeCuts(Graph& G, const Graph& G_orig, vector <edge>& sol) {
 
         if(2*delta + gamma < G.neighbors[v].size()+1) {
             //Step 1
-            for(auto i = G.neighbors[v].begin(); next(i) != G.neighbors[v].end(); i++) {
-                for(auto j = next(i); j != G.neighbors[v].end(); j++) {
-                    if(G.flag[*i][*j] == 0) G.permanent(G.name_to_ind[*i], G.name_to_ind[*j], sol, G_orig);
-                    if(G.weight[*i][*j] <= 0)G.flip_edge(G.name_to_ind[*i], G.name_to_ind[*j]);
+            if(G.neighbors[v].size() >= 2){
+                for(auto i = G.neighbors[v].begin(); next(i) != G.neighbors[v].end(); i++) {
+                    for(auto j = next(i); j != G.neighbors[v].end(); j++) {
+                        if(G.flag[*i][*j] == 0) G.permanent(G.name_to_ind[*i], G.name_to_ind[*j], sol, G_orig);
+                        if(G.weight[*i][*j] <= 0)G.flip_edge(G.name_to_ind[*i], G.name_to_ind[*j]);
+                    }
                 }
             }
             cost += delta;
