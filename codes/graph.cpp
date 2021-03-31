@@ -244,9 +244,9 @@ int Graph::merge_nodes(int a, int b, vector <edge> &sol, MergeData& mg, const Gr
   this->flag.erase(this->flag.begin()+b);
   */
   this->name_to_ind[this->node_names[b]] = -1;
-  this->num_nodes--;
   this->node_names.erase(this->node_names.begin()+b);
-  FOR(j, b, this->num_nodes) this->name_to_ind[this->node_names[j]]--;
+  if(b < this->num_nodes -1) FOR(j, b, this->num_nodes-1) this->name_to_ind[this->node_names[j]]--;
+  this->num_nodes--;
   /*
   REP(j, this->num_nodes){
     this->weight[j].erase(this->weight[j].begin()+b);
@@ -407,12 +407,11 @@ bool Graph::conflict_triple (vector <int>& triple) const {
 	        triple.push_back(this->name_to_ind[*v]);
 	        triple.push_back(this->name_to_ind[*w]);
           */
-          triple[0] = this->name_to_ind[u];
-          triple[1] = this->name_to_ind[*v];
-          triple[2] = this->name_to_ind[*w];
+          triple[0] = u;
+          triple[1] = *v;
+          triple[2] = *w;
   	      return true;
         }
-        cout <<  endl;
       }
     }
   }
