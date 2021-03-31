@@ -28,7 +28,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
     return 0;
   }
 
-  vector <int> triple;
+  vector <int> triple(3,-1);
 
   if(!G.conflict_triple(triple)){
     FOR(u, 0, G.num_nodes-1) FOR(v, u+1, G.num_nodes){

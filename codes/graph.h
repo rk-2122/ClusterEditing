@@ -14,7 +14,7 @@ class Graph{
     std::vector <std::vector <int>> flag; // 1 -> permanent, -1 -> forbidden, 0 -> not restricted
     std::vector <int> node_names;
     std::vector <int> node_pointers;
-    std::vector <std::list <int>> neighbors;
+    std::vector <std::vector <int>> neighbors;
     std::vector <int> name_to_ind;
 
     Graph();  // constructor
