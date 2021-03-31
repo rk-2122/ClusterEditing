@@ -49,9 +49,9 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
 
   
   // for naive branching
-  int a_name = G.node_names[triple[0]];
-  int b_name = G.node_names[triple[1]];
-  int c_name = G.node_names[triple[2]];
+  int a_name = triple[0];
+  int b_name = triple[1];
+  int c_name = triple[2];
 
 
   int best = -1;
