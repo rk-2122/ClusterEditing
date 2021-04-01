@@ -17,18 +17,18 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
 
   if(G.num_nodes == 2){
     if(G.Weight(0,1) > 0 && G.Flag(0,1) == 0){
-      G.permanent(0, 1, sol, G_orig); 
+      G.permanent(0, 1, sol, G_orig);
       G.reset_flag(0,1);
     }
     if(G.Weight(0,1) <= 0 && G.Flag(0,1) == 0){
       G.forbid(0, 1, sol, G_orig);
       G.reset_flag(0,1);
     }
-    
+
     return 0;
   }
 
-  vector <int> triple(3,-1);
+  vector <int> triple;
 
   if(!G.conflict_triple(triple)){
     FOR(u, 0, G.num_nodes-1) FOR(v, u+1, G.num_nodes){
@@ -40,28 +40,98 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
         G.forbid(u, v, sol, G_orig);
         G.reset_flag(u,v);
       }
-      
+
     }
     return 0;
   }
 
   if(max_obj <= 0) return -1;
 
-  
+
   // for naive branching
-  int a_name = triple[0];
-  int b_name = triple[1];
-  int c_name = triple[2];
+  int a_name = G.node_names[triple[0]];
+  int b_name = G.node_names[triple[1]];
+  int c_name = G.node_names[triple[2]];
 
 
   int best = -1;
   vector <edge> best_sol;
-  
+
   // edge branching
+
+
+  vector<vector<int>> cnt_uv;
+  FOR(u, 0, G.num_nodes-1) FOR(v, u+1, G.num_nodes){
+    if(G.Weight(u,v) <= 0 || G.Flag(u,v) != 0) continue;
+    vector<int> tmp;
+    int cnt = 0;
+    bool merge_flag = true;
+    FOR(z, 0, G.num_nodes){
+      if(u == z || v == z) continue;
+      if((G.Weight(u,z) > 0 && G.Weight(v,z) <= 0) || (G.Weight(u,z) <= 0 && G.Weight(v,z) > 0)) cnt++;
+      if((G.Flag(u,z) == -1 && G.Flag(v,z) == 1) || (G.Flag(u,z) == 1 && G.Flag(v,z) == -1)) merge_flag = false;
+    }
+    tmp.push_back(cnt);
+    tmp.push_back(u);
+    tmp.push_back(v);
+    cnt_uv.push_back(tmp);
+    tmp.clear();
+  }
+
+  sort(cnt_uv.begin(), cnt_uv.end(), [](const vector<int> &alpha, const vector<int > &beta){return alpha[0] > beta[0];});
+
+  FOR(i, 0, cnt_uv.size()){
+    if(cnt_uv[i][0] >= 3) {
+      int u = cnt_uv[i][1];
+      int v = cnt_uv[i][2];
+      int u_name = G.node_names[u];
+      int v_name = G.node_names[v];
+      if(u_name > v_name) SWAP(int, u_name, v_name);
+
+      int w = G.Weight(u,v);
+      G.forbid(u, v, best_sol, G_orig);
+      G.flip_edge(u,v);
+
+      best = naive_branching(G, G_orig, max_obj-w, best_sol);
+      if(best != -1) best += w;
+
+      G.reset_flag(G.name_to_ind[u_name],G.name_to_ind[v_name]);
+      G.flip_edge(G.name_to_ind[u_name],G.name_to_ind[v_name]);
+
+      bool merge_flag = true;
+      FOR(z, 0, G.num_nodes){
+        if(u == z || v == z) continue;
+        if((G.Flag(u,z) == -1 && G.Flag(v,z) == 1) || (G.Flag(u,z) == 1 && G.Flag(v,z) == -1)) merge_flag = false;
+    }
+      if(merge_flag){
+        vector <edge> tmpsol;
+        G.permanent(G.name_to_ind[u_name], G.name_to_ind[v_name], tmpsol, G_orig);
+        MergeData mg(G_orig.num_nodes);
+        int mergecost = G.merge_nodes(G.name_to_ind[u_name], G.name_to_ind[v_name], tmpsol, mg, G_orig);
+        int cost = naive_branching(G, G_orig, max_obj-mergecost, tmpsol);
+        if((cost != -1) && (best == -1 || cost + mergecost < best)){
+          best = cost + mergecost;
+          best_sol = tmpsol;
+        }
+
+        G.expand_nodes(u_name, v_name, mg);
+        G.reset_flag(G.name_to_ind[u_name],G.num_nodes-1);
+      }
+
+      if(best != -1) sol.insert(sol.end(), best_sol.begin(), best_sol.end());
+      return best;
+    }else{
+      break;
+    }
+  }
+
+
+/*
+
 
   FOR(u, 0, G.num_nodes-1) FOR(v, u+1, G.num_nodes){
     if(G.Weight(u,v) <= 0 || G.Flag(u,v) != 0) continue;
-    
+
     int cnt = 0;
     bool merge_flag = true;
     FOR(z, 0, G.num_nodes){
@@ -79,7 +149,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
       int w = G.Weight(u,v);
       G.forbid(u, v, best_sol, G_orig);
       G.flip_edge(u,v);
-      
+
       best = naive_branching(G, G_orig, max_obj-w, best_sol);
       if(best != -1) best += w;
 
@@ -96,7 +166,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
           best = cost + mergecost;
           best_sol = tmpsol;
         }
-       
+
         G.expand_nodes(u_name, v_name, mg);
         G.reset_flag(G.name_to_ind[u_name],G.num_nodes-1);
       }
@@ -105,6 +175,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
       return best;
     }
   }
+*/
 
   // merge a, b, & c
   int a = G.name_to_ind[a_name];
@@ -128,7 +199,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
       G.permanent(b, c, best_sol, G_orig);
       flag_bc = true;
     }
-    
+
     G.weight[b_name][c_name]--; // for when G.weight[b_name][c_name] == 0
     G.weight[c_name][b_name]--; // for when G.weight[b_name][c_name] == 0
     G.flip_edge(b,c);
@@ -139,25 +210,25 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
 
     MergeData mg_bc(G_orig.num_nodes);
     int tmp = G.merge_nodes(b, c, best_sol, mg_bc, G_orig);
-    
+
     if(tmp == -1) cerr << "err" << endl;
     t += tmp;
     if(b > c) b--;
     if(a > c) a--;
-    
+
     MergeData mg_ab(G_orig.num_nodes);
     tmp = G.merge_nodes(a, b, best_sol, mg_ab, G_orig);
     if(tmp == -1) cerr << "err" << endl;
     t += tmp;
-  
+
     int tt = naive_branching(G, G_orig, max_obj+w, best_sol);
     if (tt != -1){
       best = tt + t - w;
       if(best < max_obj) max_obj = best;
     }
 
-    int a_name_srt = a_name; 
-    int b_name_srt = b_name; 
+    int a_name_srt = a_name;
+    int b_name_srt = b_name;
     int c_name_srt = c_name;
     if (a_name_srt > b_name_srt) SWAP(int, a_name_srt, b_name_srt);
     if (b_name_srt > c_name_srt) SWAP(int, b_name_srt, c_name_srt);
@@ -176,7 +247,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
     if(flag_ab) G.reset_flag(a,b);
     if(flag_bc) G.reset_flag(b,c);
     if(flag_ac) G.reset_flag(a,c);
-    
+
   }
 
   // merge a & b, and forbid a & c and b & c
@@ -221,14 +292,14 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
     if(flag_ac) G.reset_flag(a,c);
   }
 
-  // forbid a & b 
+  // forbid a & b
   if(G.Flag(a,b) != 1){
     vector <edge> tmp_sol;
 
     G.forbid(a,b, tmp_sol, G_orig);
     int w = G.Weight(a,b);
     G.flip_edge(a,b);
-    
+
     int tt = naive_branching(G, G_orig, max_obj-w, tmp_sol);
     if (tt != -1 && (best == -1 || best > tt + w)){
       best = tt + w;
@@ -299,7 +370,7 @@ int random_pivot(Graph& G, const Graph& G_orig, std::vector <edge>& sol){
             G.forbid(neighbor[i],nodes[j],sol,G_orig);
             G.reset_flag(neighbor[i],nodes[j]);
           }
-        
+
           if(G.Weight(neighbor[i],nodes[j]) > 0){
             cost += G.Weight(neighbor[i],nodes[j]);
           }
