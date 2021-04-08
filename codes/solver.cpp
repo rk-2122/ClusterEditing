@@ -92,7 +92,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
 
 //strategy2
 
-/*
+
   vector<vector<int>> cnt_uv;
 
 
@@ -102,7 +102,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
     int cnt_weight = 0;
     FOR(z, 0, G.num_nodes){
       if(u == z || v == z) continue;
-      if((G.Weight(u,z) > 0 && G.Weight(v,z) <= 0) || (G.Weight(u,z) <= 0 && G.Weight(v,z) > 0)) cnt_weight += G.Weight(u,z) + G.Weight(v,z);
+      if((G.Weight(u,z) > 0 && G.Weight(v,z) <= 0) || (G.Weight(u,z) <= 0 && G.Weight(v,z) > 0)) cnt_weight += abs(G.Weight(u,z)) + abs(G.Weight(v,z));
     }
     tmp.push_back(cnt_weight);
     tmp.push_back(u);
@@ -114,7 +114,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
   sort(cnt_uv.begin(), cnt_uv.end(), [](const vector<int> &alpha, const vector<int > &beta){return alpha[0] > beta[0];});
   //cout << cnt_uv[0][0] << cnt_uv[0][1] << cnt_uv[0][2] << endl;
   FOR(i, 0, cnt_uv.size()){
-    if(cnt_uv[i][0] >= 0) {
+    if(cnt_uv[i][0] >= 1) {
       int u = cnt_uv[i][1];
       int v = cnt_uv[i][2];
       int u_name = G.node_names[u];
@@ -159,10 +159,10 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
       break;
     }
   }
-*/
+
 
 //strategy1
-
+/*
   vector<vector<int>> cnt_uv;
   FOR(u, 0, G.num_nodes-1) FOR(v, u+1, G.num_nodes){
     if(G.Weight(u,v) <= 0 || G.Flag(u,v) != 0) continue;
@@ -184,7 +184,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
   sort(cnt_uv.begin(), cnt_uv.end(), [](const vector<int> &alpha, const vector<int > &beta){return alpha[0] > beta[0];});
 
   FOR(i, 0, cnt_uv.size()){
-    if(cnt_uv[i][0] >= 3) {
+    if(cnt_uv[i][0] >= 1) {
       int u = cnt_uv[i][1];
       int v = cnt_uv[i][2];
       int u_name = G.node_names[u];
@@ -230,7 +230,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
     }
   }
 
-
+*/
 
 // default
 
@@ -286,6 +286,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
   }
 */
 
+  cout << 'a' << endl;
   // merge a, b, & c
   int a = G.name_to_ind[a_name];
   int b = G.name_to_ind[b_name];
