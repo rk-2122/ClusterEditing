@@ -389,21 +389,15 @@ int random_pivot(Graph& G, const Graph& G_orig, std::vector <edge>& sol){
   return best_cost;
 }
 
-int lp_solve(const Graph &G, vector <vector <double>>& lp_ksol){
+int lp_solve(Graph &G, vector <vector <double>>& lp_ksol){
   int n = G.num_nodes;
-  lp_ksol = vector <vector <double> > (n, vector <double>(n, 0));
-  double obj;
-
   glp_prob *lp;
-  int ia[1+1000], ja[1+1000], ar[1+1000];
   
+  int ia[1+1000], ja[1+1000];
+  double ar[1+1000], z, x1, x2, x3;
+
   lp = glp_create_prob();
   glp_set_obj_dir(lp, GLP_MIN);
-  glp_add_cols(lp, n*(n-1)/2);
-  FOR(i, 0, n-1) FOR(j, i+1, n){
-    glp_set_col_bnds(lp, i, GLP_DB, 0.0, 1.0);
-    glp_set_obj_coef(lp, i, 10.0);
-  }
 
   glp_add_rows(lp, 3);
   glp_set_row_name(lp, 1, "p");
@@ -412,12 +406,12 @@ int lp_solve(const Graph &G, vector <vector <double>>& lp_ksol){
   glp_set_row_bnds(lp, 2, GLP_UP, 0.0, 600.0);
   glp_set_row_name(lp, 3, "r");
   glp_set_row_bnds(lp, 3, GLP_UP, 0.0, 300.0);
-  
+  glp_add_cols(lp, 3);
   glp_set_col_name(lp, 1, "x1");
   glp_set_col_bnds(lp, 1, GLP_LO, 0.0, 0.0);
-
+  glp_set_obj_coef(lp, 1, 10.0);
   glp_set_col_name(lp, 2, "x2");
-  
+  glp_set_col_bnds(lp, 2, GLP_LO, 0.0, 0.0);
   glp_set_obj_coef(lp, 2, 6.0);
   glp_set_col_name(lp, 3, "x3");
   glp_set_col_bnds(lp, 3, GLP_LO, 0.0, 0.0);
@@ -433,8 +427,11 @@ int lp_solve(const Graph &G, vector <vector <double>>& lp_ksol){
   ia[9]=3,ja[9]=3,ar[9]= 6.0;/*a[3,3]= 6*/
   glp_load_matrix(lp, 9, ia, ja, ar);
   glp_simplex(lp, NULL);
-  int obj = glp_get_obj_val(lp);
+  z = glp_get_obj_val(lp);
+  x1 = glp_get_col_prim(lp, 1);
+  x2 = glp_get_col_prim(lp, 2);
+  x3 = glp_get_col_prim(lp, 3);
   printf("\nz = %g; x1 = %g; x2 = %g; x3 = %g\n", z, x1, x2, x3);
   glp_delete_prob(lp);
-  return obj;
+  return 0;
 }
