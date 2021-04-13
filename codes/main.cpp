@@ -15,7 +15,6 @@
 
 using namespace std;
 
-
 int main(int argc, char *argv[]){
   // parser
   cmdline::parser op;
@@ -39,7 +38,7 @@ int main(int argc, char *argv[]){
   else Gin = Graph("../instances/exact/exact003.gr");
 
   vector <edge> sol;
-  
+
   //////////////////// begin
 
 
@@ -59,17 +58,19 @@ int main(int argc, char *argv[]){
     cout << op.get<string>("input") << " " << obj1 << " " << red_cost << " " << Gin.num_nodes << " " << G.num_nodes << " " << (double) (c_end - c_start)/ CLOCKS_PER_SEC << endl;
     return 0;
   }
- 
-  int obj2 = naive_branching(G, Gin, obj1-red_cost, sol2);
-  
+
+  int rec_depth = 0;
+  int obj2 = naive_branching(G, Gin, obj1-red_cost, sol2, rec_depth);
+  //int obj2 = edge_branching(G, Gin, obj1-red_cost, sol2);
+
   if (obj1 > obj2 + red_cost && obj2 != -1){
     obj1 = obj2 + red_cost;
     sol1 = sol2;
   }
   clock_t c_end = clock();
-
   if(DEBUG){
     cout << op.get<string>("input") << " "<< obj1 << " "<< (double) (c_end - c_start)/ CLOCKS_PER_SEC << endl;
+    ret_cnt();
   }
 
   if(op.exist("output")){
@@ -78,16 +79,12 @@ int main(int argc, char *argv[]){
   }
 
 
-
-  //test
 /*
+  //test
   Graph G = Gin;
   int cost;
   vector <edge> sol;
-  cost = cal_ker(G, Gin, sol);
-  show_sol(sol);
-  cout << cost << endl;
-  cout << "sol_num = " << sol.size() << endl;
+
   return 0;
   */
 }
