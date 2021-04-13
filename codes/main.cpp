@@ -41,8 +41,9 @@ int main(int argc, char *argv[]){
   vector <edge> sol;
   
   //////////////////// begin
-  vector <vector <double>> lp_ksol;
-  lp_solve(Gin, lp_ksol);
+  vector <vector <double> > lp_sol;
+  lp_solve(Gin, lp_sol);
+  return 0;
 
   clock_t c_start = clock();
 
