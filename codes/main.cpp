@@ -40,14 +40,23 @@ int main(int argc, char *argv[]){
   vector <edge> sol;
 
   //////////////////// begin
-
-
   clock_t c_start = clock();
 
   Graph G = Gin;
-
+  vector <vector <double> > lp_sol;
+  double lp_obj = lp_solve(Gin, lp_sol);
+  // cout << "lp obj " << lp_obj << endl;
   vector <edge> sol1;
-  int obj1 = random_pivot(G, Gin, sol1);
+  int obj1 = lp_pivot(G, Gin, sol1, lp_sol);
+  //cout << "lp pivot " << lp_pivot_ob << endl;
+
+  vector <edge> random_pivot_sol;
+  int random_pivot_obj = random_pivot(G, Gin, random_pivot_sol);
+  if(obj1 < random_pivot_obj){
+    obj1 = random_pivot_obj;
+    sol1 = random_pivot_sol;
+  }
+  
 
   vector <edge> sol2;
   int red_cost = cal_reduction(G, Gin, obj1, sol2);
