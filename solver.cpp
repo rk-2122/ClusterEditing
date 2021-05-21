@@ -3,22 +3,63 @@
 #include <iostream>
 #include <algorithm>
 #include "random.hpp"
-
+#include <chrono>
 #include "main.h"
 #include "graph.h"
 #include "solver.h"
 
 using namespace std;
+using namespace chrono;
 
 static int rec_cnt = 0;
+static double create_verctor_time = 0;
+int idx;
+vector<vector<int>> s2_uv;
+vector <int> tmp_uv;
+system_clock::time_point start, end;
+
+
 int random_pivot(Graph& G, const Graph& G_orig, std::vector <edge>& sol);
 
 void ret_cnt() {
   cout << rec_cnt << endl;
 }
 
+double ret_time() {
+  return create_verctor_time / 1000000000;
+}
 
-int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& sol){
+void show(vector<vector<int>> arr) {
+  FOR(i,0,arr.size()) {
+    FOR(j,0,arr[i].size()) {
+      cout << arr[i][j] << ' ';
+    }
+    cout <<endl;
+  }
+}
+
+void ret_cnt_vector(Graph& G, vector<vector<int>>& s2_uv) {
+
+  FOR(u, 0, G.num_nodes-1) FOR(v, u+1, G.num_nodes) {
+    if (G.Weight(u,v) <= 0 || G.Flag(u,v) !=0) continue;
+    vector<int> s2_tmp;
+    int cost = 0;
+    FOR(z, 0, G.num_nodes) {
+      if (u == z || v == z) continue;
+      if ((G.Weight(u,v) > 0 && G.Weight(v,z) <= 0) || (G.Weight(u,v) <= 0 && G.Weight(v,z) > 0)) {
+        cost += min(abs(G.Weight(u,z)), abs(G.Weight(v,z)));
+      }
+    }
+    s2_tmp.push_back(cost);
+    s2_tmp.push_back(u);
+    s2_tmp.push_back(v);
+    s2_uv.push_back(s2_tmp);
+    s2_tmp.clear();
+  }
+  sort(s2_uv.begin(), s2_uv.end(), [](const vector<int> &alpha, const vector<int > &beta){return alpha[0] > beta[0];});
+}
+
+int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& sol, int rec_depth){
   rec_cnt++;
 
   if(G.num_nodes <= 1)  return 0;
@@ -58,10 +99,9 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
   vector <edge> best_sol;
 
 // edge branching
-
-
+/*
+  auto start = system_clock::now();
   vector<vector<int>> s2_uv;
-
   FOR(u, 0, G.num_nodes-1) FOR(v, u+1, G.num_nodes){
     if(G.Weight(u,v) <= 0 || G.Flag(u,v) != 0) continue;
     vector<int> s2_tmp;
@@ -73,32 +113,65 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
       }
     }
     s2_tmp.push_back(cost);
-    s2_tmp.push_back(u);
-    s2_tmp.push_back(v);
+    s2_tmp.push_back(G.node_names[u]);
+    s2_tmp.push_back(G.node_names[v]);
     s2_uv.push_back(s2_tmp);
     s2_tmp.clear();
   }
-
   sort(s2_uv.begin(), s2_uv.end(), [](const vector<int> &alpha, const vector<int > &beta){return alpha[0] > beta[0];});
+  auto end = system_clock::now();
+  double elapsed = duration_cast<nanoseconds>(end-start).count();
+  create_verctor_time += elapsed;
+*/
 
-  if(s2_uv.size() > 0) {
-    if(s2_uv[0][0] >= 0) {
-      int u = s2_uv[0][1];
-      int v = s2_uv[0][2];
-      bool merge_flag = true;
+  if (rec_depth % 100 == 0){
+    auto start = system_clock::now();
+    FOR(u, 0, G.num_nodes-1) FOR(v, u+1, G.num_nodes){
+      if(G.Weight(u,v) <= 0 || G.Flag(u,v) != 0) continue;
+      vector<int> s2_tmp;
+      int cost = 0;
       FOR(z, 0, G.num_nodes){
         if(u == z || v == z) continue;
-        if((G.Flag(u,z) == -1 && G.Flag(v,z) == 1) || (G.Flag(u,z) == 1 && G.Flag(v,z) == -1)) merge_flag = false;
+        if((G.Weight(u,z) > 0 && G.Weight(v,z) <= 0) || (G.Weight(u,z) <= 0 && G.Weight(v,z) > 0)){
+          cost += min(abs(G.Weight(u,z)), abs(G.Weight(v,z)));
+        }
       }
-      int u_name = G.node_names[u];
-      int v_name = G.node_names[v];
-      if(u_name > v_name) SWAP(int, u_name, v_name);
+      s2_tmp.push_back(cost);
+      s2_tmp.push_back(G.node_names[u]);
+      s2_tmp.push_back(G.node_names[v]);
+      s2_uv.push_back(s2_tmp);
+      s2_tmp.clear();
+    }
+    sort(s2_uv.begin(), s2_uv.end(), [](const vector<int> &alpha, const vector<int > &beta){return alpha[0] > beta[0];});
+    auto end = system_clock::now();
+    double elapsed = duration_cast<nanoseconds>(end-start).count();
+    create_verctor_time += elapsed;
+  }
 
+
+  if (s2_uv.size() > 0) {
+    FOR (i,0,s2_uv.size()) {
+      int u_name = s2_uv[i][1];
+      int v_name = s2_uv[i][2];
+      int u = G.name_to_ind[u_name];
+      int v = G.name_to_ind[v_name];
+
+      if (u == -1 || v == -1) continue;
+      if(G.weight[u_name][v_name] <= 0 || G.flag[u_name][v_name] != 0) continue;
+      if(G.Weight(u,v) <= 0 || G.Flag(u,v) != 0) continue;
+
+      bool merge_flag = true;
+      FOR(z, 0, G.num_nodes){
+        if(u_name == z || v_name == z) continue;
+        if((G.flag[u_name][z] == -1 && G.flag[v_name][z] == 1) || (G.flag[u_name][z] == 1 && G.flag[v_name][z] == -1)) merge_flag = false;
+      }
+
+      if(u_name > v_name) SWAP(int, u_name, v_name);
       int w = G.Weight(u,v);
       G.forbid(u, v, best_sol, G_orig);
       G.flip_edge(u,v);
 
-      best = naive_branching(G, G_orig, max_obj-w, best_sol);
+      best = naive_branching(G, G_orig, max_obj-w, best_sol, rec_depth+1);
       if(best != -1) {
         best += w;
         if(best < max_obj) max_obj = best;
@@ -112,7 +185,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
         G.permanent(G.name_to_ind[u_name], G.name_to_ind[v_name], tmpsol, G_orig);
         MergeData mg(G_orig.num_nodes);
         int mergecost = G.merge_nodes(G.name_to_ind[u_name], G.name_to_ind[v_name], tmpsol, mg, G_orig);
-        int cost = naive_branching(G, G_orig, max_obj-mergecost, tmpsol);
+        int cost = naive_branching(G, G_orig, max_obj-mergecost, tmpsol, rec_depth+1);
         if((cost != -1) && (best == -1 || cost + mergecost < best)){
           best = cost + mergecost;
           best_sol = tmpsol;
@@ -194,3 +267,4 @@ int random_pivot(Graph& G, const Graph& G_orig, std::vector <edge>& sol){
   if(best_cost != -1) sol.insert(sol.end(), best_sol.begin(), best_sol.end());
   return best_cost;
 }
+
