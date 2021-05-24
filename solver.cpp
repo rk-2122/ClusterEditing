@@ -38,29 +38,8 @@ void show(vector<vector<int>> arr) {
   }
 }
 
-void ret_cnt_vector(Graph& G, vector<vector<int>>& s2_uv) {
-
-  FOR(u, 0, G.num_nodes-1) FOR(v, u+1, G.num_nodes) {
-    if (G.Weight(u,v) <= 0 || G.Flag(u,v) !=0) continue;
-    vector<int> s2_tmp;
-    int cost = 0;
-    FOR(z, 0, G.num_nodes) {
-      if (u == z || v == z) continue;
-      if ((G.Weight(u,v) > 0 && G.Weight(v,z) <= 0) || (G.Weight(u,v) <= 0 && G.Weight(v,z) > 0)) {
-        cost += min(abs(G.Weight(u,z)), abs(G.Weight(v,z)));
-      }
-    }
-    s2_tmp.push_back(cost);
-    s2_tmp.push_back(u);
-    s2_tmp.push_back(v);
-    s2_uv.push_back(s2_tmp);
-    s2_tmp.clear();
-  }
-  sort(s2_uv.begin(), s2_uv.end(), [](const vector<int> &alpha, const vector<int > &beta){return alpha[0] > beta[0];});
-}
-
-int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& sol, int rec_depth){
-  rec_cnt++;
+int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& sol, int rec_depth, vector<vector<int>>& uv){
+  //rec_cnt++;
 
   if(G.num_nodes <= 1)  return 0;
 
@@ -98,34 +77,10 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
   int best = -1;
   vector <edge> best_sol;
 
-// edge branching
-/*
-  auto start = system_clock::now();
-  vector<vector<int>> s2_uv;
-  FOR(u, 0, G.num_nodes-1) FOR(v, u+1, G.num_nodes){
-    if(G.Weight(u,v) <= 0 || G.Flag(u,v) != 0) continue;
-    vector<int> s2_tmp;
-    int cost = 0;
-    FOR(z, 0, G.num_nodes){
-      if(u == z || v == z) continue;
-      if((G.Weight(u,z) > 0 && G.Weight(v,z) <= 0) || (G.Weight(u,z) <= 0 && G.Weight(v,z) > 0)){
-        cost += min(abs(G.Weight(u,z)), abs(G.Weight(v,z)));
-      }
-    }
-    s2_tmp.push_back(cost);
-    s2_tmp.push_back(G.node_names[u]);
-    s2_tmp.push_back(G.node_names[v]);
-    s2_uv.push_back(s2_tmp);
-    s2_tmp.clear();
-  }
-  sort(s2_uv.begin(), s2_uv.end(), [](const vector<int> &alpha, const vector<int > &beta){return alpha[0] > beta[0];});
-  auto end = system_clock::now();
-  double elapsed = duration_cast<nanoseconds>(end-start).count();
-  create_verctor_time += elapsed;
-*/
 
-  if (rec_depth % 100 == 0){
-    auto start = system_clock::now();
+  if (rec_depth % 10 == 0){
+    uv.clear();
+    //auto start = system_clock::now();
     FOR(u, 0, G.num_nodes-1) FOR(v, u+1, G.num_nodes){
       if(G.Weight(u,v) <= 0 || G.Flag(u,v) != 0) continue;
       vector<int> s2_tmp;
@@ -139,20 +94,19 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
       s2_tmp.push_back(cost);
       s2_tmp.push_back(G.node_names[u]);
       s2_tmp.push_back(G.node_names[v]);
-      s2_uv.push_back(s2_tmp);
+      uv.push_back(s2_tmp);
       s2_tmp.clear();
     }
-    sort(s2_uv.begin(), s2_uv.end(), [](const vector<int> &alpha, const vector<int > &beta){return alpha[0] > beta[0];});
-    auto end = system_clock::now();
-    double elapsed = duration_cast<nanoseconds>(end-start).count();
-    create_verctor_time += elapsed;
+    sort(uv.begin(), uv.end(), [](const vector<int> &alpha, const vector<int > &beta){return alpha[0] > beta[0];});
+    //auto end = system_clock::now();
+    //double elapsed = duration_cast<nanoseconds>(end-start).count();
+    //create_verctor_time += elapsed;
   }
 
-
-  if (s2_uv.size() > 0) {
-    FOR (i,0,s2_uv.size()) {
-      int u_name = s2_uv[i][1];
-      int v_name = s2_uv[i][2];
+  if (uv.size() > 0) {
+    FOR (i,0,uv.size()) {
+      int u_name = uv[i][1];
+      int v_name = uv[i][2];
       int u = G.name_to_ind[u_name];
       int v = G.name_to_ind[v_name];
 
@@ -171,7 +125,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
       G.forbid(u, v, best_sol, G_orig);
       G.flip_edge(u,v);
 
-      best = naive_branching(G, G_orig, max_obj-w, best_sol, rec_depth+1);
+      best = naive_branching(G, G_orig, max_obj-w, best_sol, rec_depth+1, uv);
       if(best != -1) {
         best += w;
         if(best < max_obj) max_obj = best;
@@ -185,7 +139,7 @@ int naive_branching(Graph& G, const Graph& G_orig,int max_obj, vector <edge>& so
         G.permanent(G.name_to_ind[u_name], G.name_to_ind[v_name], tmpsol, G_orig);
         MergeData mg(G_orig.num_nodes);
         int mergecost = G.merge_nodes(G.name_to_ind[u_name], G.name_to_ind[v_name], tmpsol, mg, G_orig);
-        int cost = naive_branching(G, G_orig, max_obj-mergecost, tmpsol, rec_depth+1);
+        int cost = naive_branching(G, G_orig, max_obj-mergecost, tmpsol, rec_depth+1, uv);
         if((cost != -1) && (best == -1 || cost + mergecost < best)){
           best = cost + mergecost;
           best_sol = tmpsol;
