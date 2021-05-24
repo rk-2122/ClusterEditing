@@ -2,7 +2,8 @@
 #include <list>
 #include <iostream>
 #include <algorithm>
-#include <ilcplex/ilocplex.h>
+// #include <ilcplex/ilocplex.h>
+#include <glpk.h>
 #include "random.hpp"
 
 #include "main.h"
@@ -434,11 +435,12 @@ int random_pivot(Graph& G, const Graph& G_orig, vector <edge>& sol){
   return best_cost;
 }
 
+// lp_solve cplex version
+/*
 double lp_solve(const Graph &G, vector <vector <double> >& lp_sol){
   int n = G.num_nodes;
   lp_sol = vector <vector <double> > (n, vector <double>(n, 0));
 
-  /***/
   IloEnv env;	//enviromental object
   double obj_val = 0;
 
@@ -488,6 +490,71 @@ double lp_solve(const Graph &G, vector <vector <double> >& lp_sol){
   
   return obj_val;
 }
+*/
+
+// lp_solve glpk version
+double lp_solve(const Graph &G, vector <vector <double> >& lp_sol){
+  int n = G.num_nodes;
+  lp_sol = vector <vector <double> > (n, vector <double>(n, 0));
+
+  glp_prob *lp;
+  glp_smcp parm;
+  glp_init_smcp(&parm);
+  parm.msg_lev = GLP_MSG_OFF;
+  double obj=0;
+
+  lp = glp_create_prob();
+  glp_set_obj_dir(lp, GLP_MIN);
+  glp_add_cols(lp, n*(n-1)/2);
+  FOR(i, 0, n-1) FOR(j, i+1, n){
+    // ij corresponds to index i(2n-i-1)/2 + j - i
+    glp_set_col_bnds(lp, i*(2*n-i-1)/2+j-i, GLP_DB, 0.0, 1.0);
+    //glp_set_col_kind(lp, i*(2*n-i-1)/2+j-i, GLP_BV);
+    if(G.Weight(i,j) > 0) glp_set_obj_coef(lp, i*(2*n-i-1)/2+j-i, 1.0);
+    else{
+      glp_set_obj_coef(lp, i*(2*n-i-1)/2+j-i, -1.0);
+      obj += 1;
+    }
+  }
+
+  glp_add_rows(lp, n*(n-1)*(n-2)/2);
+  int ia[1+3*n*(n-1)*(n-2)/2], ja[1+3*n*(n-1)*(n-2)/2];
+  double ar[1+3*n*(n-1)*(n-2)/2];
+  int ind = 1;
+  FOR(i, 0, n-1) FOR(j, i+1, n) FOR(k, 0, n){
+    if(k == i || k == j) continue;
+    glp_set_row_bnds(lp, ind, GLP_UP, 0.0, 0);
+    ia[3*ind-2] = ind;
+    ja[3*ind-2] = i*(2*n-i-1)/2+j-i;
+    ar[3*ind-2] = 1;
+    ia[3*ind-1] = ind;
+    if(i < k) ja[3*ind-1] = i*(2*n-i-1)/2+k-i;
+    else ja[3*ind-1] = k*(2*n-k-1)/2+i-k;
+    ar[3*ind-1] = -1;
+    ia[3*ind] = ind;
+    if(j < k) ja[3*ind] = j*(2*n-j-1)/2+k-j;
+    else ja[3*ind] = k*(2*n-k-1)/2+j-k;
+    ar[3*ind] = -1;
+    ind++;
+  }
+
+  glp_load_matrix(lp, 3*n*(n-1)*(n-2)/2, ia, ja, ar);
+  glp_simplex(lp, &parm);
+  //glp_intopt(lp, NULL);
+  obj += glp_get_obj_val(lp);
+  glp_delete_prob(lp);
+  //cout << "lp_obj: " << obj << endl;
+
+  if(glp_get_status(lp) != GLP_OPT && glp_get_status(lp) != GLP_FEAS) cerr << "lp solver error" << endl;
+
+  FOR(i, 0, n-1) FOR(j, i+1, n){
+    lp_sol[i][j] = glp_get_col_prim(lp, i*(2*n-i-1)/2+j-i);
+    // cout << i << "," << j << ": " << lp_sol[i][j] << endl;
+  } 
+  
+  return obj;
+}
+
 
 int lp_pivot(Graph &G,  const Graph& G_orig, vector <edge>& sol, const vector <vector <double> >& lp_sol){
   rnd.seed(RANDOM_SEED);
