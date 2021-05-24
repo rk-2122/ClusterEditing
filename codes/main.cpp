@@ -12,7 +12,6 @@
 #include "solver.h"
 #include "reduction.h"
 
-
 using namespace std;
 
 int main(int argc, char *argv[]){
@@ -35,28 +34,19 @@ int main(int argc, char *argv[]){
     const char *fn = op.get<string>("input").c_str();
     Gin = Graph(fn);
   }
-  else Gin = Graph("../instances/exact/exact003.gr");
+  else Gin = Graph("./test.gr");
 
   vector <edge> sol;
 
   //////////////////// begin
+
+
   clock_t c_start = clock();
 
   Graph G = Gin;
-  vector <vector <double> > lp_sol;
-  double lp_obj = lp_solve(Gin, lp_sol);
-  // cout << "lp obj " << lp_obj << endl;
-  vector <edge> sol1;
-  int obj1 = lp_pivot(G, Gin, sol1, lp_sol);
-  //cout << "lp pivot " << lp_pivot_ob << endl;
 
-  vector <edge> random_pivot_sol;
-  int random_pivot_obj = random_pivot(G, Gin, random_pivot_sol);
-  if(obj1 < random_pivot_obj){
-    obj1 = random_pivot_obj;
-    sol1 = random_pivot_sol;
-  }
-  
+  vector <edge> sol1;
+  int obj1 = random_pivot(G, Gin, sol1);
 
   vector <edge> sol2;
   int red_cost = cal_reduction(G, Gin, obj1, sol2);
@@ -69,7 +59,9 @@ int main(int argc, char *argv[]){
   }
 
   int rec_depth = 0;
-  int obj2 = naive_branching(G, Gin, obj1-red_cost, sol2, rec_depth);
+  vector<vector<int> > uv;
+  uv.clear();
+  int obj2 = naive_branching(G, Gin, obj1-red_cost, sol2, rec_depth, uv);
   //int obj2 = edge_branching(G, Gin, obj1-red_cost, sol2);
 
   if (obj1 > obj2 + red_cost && obj2 != -1){
@@ -78,24 +70,16 @@ int main(int argc, char *argv[]){
   }
   clock_t c_end = clock();
   if(DEBUG){
+    double elapsed = (double) (c_end - c_start) / CLOCKS_PER_SEC;
     cout << op.get<string>("input") << " "<< obj1 << " "<< (double) (c_end - c_start)/ CLOCKS_PER_SEC << endl;
-    ret_cnt();
+    //ret_cnt();
+    //cout << (ret_time() / elapsed) * 100 << endl;
   }
 
   if(op.exist("output")){
     const char *fo = op.get<string>("output").c_str();
     write_sol(sol1,fo);
   }
-
-
-/*
-  //test
-  Graph G = Gin;
-  int cost;
-  vector <edge> sol;
-
-  return 0;
-  */
 }
 
 
