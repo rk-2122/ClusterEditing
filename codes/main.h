@@ -11,7 +11,7 @@
 typedef std::pair<int, int> edge;
 
 #define DEBUG 1  // 0 -> no output, 1 -> debug
-#define RANDOM_SEED 1243 
+#define RANDOM_SEED 1243
 #define NUM_PIVOT 5
 
 void show_sol(const std::vector <edge>& sol);
