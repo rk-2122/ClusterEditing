@@ -1,6 +1,5 @@
-
 import sys
-import networkx as nx 
+import networkx as nx
 import matplotlib.pyplot as plt
 import random
 
@@ -47,7 +46,6 @@ for i in C:
         G.nodes[j]['viz']['color']['a']= 1
         G.nodes[j]['id'] = j
     t += 1
-  
 
 
 nx.write_gexf(G, sys.argv[1])
