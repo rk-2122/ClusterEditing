@@ -47,11 +47,11 @@ int main(int argc, char *argv[]){
   vector <edge> lp_solve_sol;
   double lp_obj = lp_solve(Gin, lp_sol);
   vector <edge> sol1;
- // int obj1 = lp_pivot(G, Gin, sol1, lp_sol);
-  //vector <edge> random_pivot_sol;
-  //int random_pivot_obj = random_pivot(G, Gin, random_pivot_sol);
-  //cout << lp_obj << " " << obj1 << " " << random_pivot_obj << endl;
-  cout << op.get<string>("input") << " "<< lp_obj << endl;
+  int obj1 = lp_pivot(G, Gin, sol1, lp_sol);
+  vector <edge> random_pivot_sol;
+  int random_pivot_obj = random_pivot(G, Gin, random_pivot_sol);
+  cout << op.get<string>("input") << lp_obj << " " << obj1 << " " << random_pivot_obj << endl;
+  //cout << op.get<string>("input") << " "<< lp_obj << endl;
 
   /*
   for(int i=0; i<lp_sol.size(); i++) {
